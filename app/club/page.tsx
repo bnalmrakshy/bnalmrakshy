@@ -32,6 +32,11 @@ function Club({ me }: { me: Me }) {
         <h2 className="text-xl font-black">الستريك: {ar(me.streak)} من {ar(d.target)}</h2>
         <div className="flex gap-2 mt-4" dir="ltr">{Array.from({ length: d.target }).map((_, i) => <span key={i} className={`w-8 h-8 rounded-full border ${i < me.streak ? "bg-brass border-brass" : "border-roast/30"}`} />)}</div>
         {d.pending > 0 && <Link href="/rewards" className="block mt-6 bg-brass text-espresso font-bold p-4">عندك {ar(d.pending)} مشروب مجاني مستني، يوم الجمعة تاخد كوده ←</Link>}
+        <div className="mt-8 flex flex-col gap-3">
+          <Link href="/scan" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">امسح كود الكاشير وسجّل زيارتك</Link>
+          {me.role !== "member" && <Link href="/staff" className="border border-espresso text-center py-3 font-bold">تأكيد مشروب الجمعة</Link>}
+          {me.role === "admin" && <Link href="/admin" className="border border-espresso text-center py-3 font-bold">الإدارة وتوليد كود التسجيل</Link>}
+        </div>
         <h2 className="text-xl font-black mt-10">آخر زياراتك</h2>
         {d.days.length === 0 ? <p className="mt-3 text-roast">لسه مسجلتش زيارة. امسح كود الكاشير أول ما تيجي.</p> :
           <ul className="mt-3">{d.days.map(x => <li key={x} className="py-3 border-b border-sand num" dir="ltr" style={{ textAlign: "right" }}>{x}</li>)}</ul>}

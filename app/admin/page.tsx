@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Gate from "@/components/Gate";
+import QrPanel from "@/components/QrPanel";
 import { sb, ar } from "@/lib/supabase";
 type M = { id: string; username: string; display_name: string; role: string; suspended: boolean; streak: number; points: number; visits: number; created_at: string };
 type St = { members: number; visits: number; points: number; drinks: number; staff: number; suspended: number; target: number };
-const T = [["members", "الأعضاء"], ["audit", "السجل"], ["settings", "الإعدادات"]];
+const T = [["qr", "كود التسجيل"], ["members", "الأعضاء"], ["audit", "السجل"], ["settings", "الإعدادات"]];
 const RL: Record<string, string> = { member: "عضو", staff: "موظف", admin: "أدمن" };
 const ACT: Record<string, string> = { set_role: "تغيير دور", set_suspended: "إيقاف/تفعيل", update_settings: "تعديل الإعدادات", admin_set_password: "تغيير باسورد", admin_delete_user: "حذف حساب", admin_delete_failed: "فشل حذف", open_session: "فتح تسجيل", close_session: "قفل تسجيل", use_drink: "تأكيد مشروب" };
 async function api(path: string, body: object) {
@@ -13,7 +14,7 @@ async function api(path: string, body: object) {
   const j = await r.json().catch(() => ({})); return r.ok ? null : (j.error ?? "فشلت العملية") as string;
 }
 function Admin({ meId }: { meId: string }) {
-  const [tab, setTab] = useState("members"); const [msg, setMsg] = useState(""); const [st, setSt] = useState<St | null>(null);
+  const [tab, setTab] = useState("qr"); const [msg, setMsg] = useState(""); const [st, setSt] = useState<St | null>(null);
   const [q, setQ] = useState(""); const [roleF, setRoleF] = useState(""); const [statF, setStatF] = useState(""); const [sort, setSort] = useState("created_at");
   const [ms, setMs] = useState<M[] | null>(null); const [open, setOpen] = useState(""); const [det, setDet] = useState<string[]>([]);
   const [audit, setAudit] = useState<any[]>([]); const [cfg, setCfg] = useState({ pts: 10, target: 7 });
@@ -43,6 +44,7 @@ function Admin({ meId }: { meId: string }) {
       <div className="grid grid-cols-3 gap-4 mt-6">{stats.map(([l, n]) => <div key={l}><div className="text-2xl font-black num">{n == null ? "–" : ar(n)}</div><div className="text-xs text-roast/70">{l}</div></div>)}</div>
       <div className="flex gap-1 mt-8 overflow-x-auto">{T.map(([k, l]) => <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 font-bold border-b-2 whitespace-nowrap ${tab === k ? "border-brass" : "border-transparent text-roast/60"}`}>{l}</button>)}</div>
       {msg && <p role="status" className="mt-4 text-caramel font-semibold">{msg}</p>}
+      {tab === "qr" && <QrPanel />}
       {tab === "members" && <section className="mt-6">
         <form onSubmit={e => { e.preventDefault(); members(q); }} className="flex flex-wrap gap-3">
           <input className={inp + " flex-1 min-w-[10rem]"} placeholder="ابحث بالاسم أو اليوزر" value={q} onChange={e => setQ(e.target.value)} />
