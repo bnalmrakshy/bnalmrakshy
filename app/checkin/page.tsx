@@ -22,7 +22,12 @@ export default function CheckIn() {
   return (
     <main className="bg-espresso text-cream min-h-[85vh] px-6 py-16 text-center">
       <svg viewBox="0 0 52 52" className="w-24 mx-auto"><circle cx="26" cy="26" r="24" fill="none" stroke="#B38A4A" strokeWidth="2" />
-        <motion.path d="M14 27l8 8 16-17" fill="none" stroke="#B38A4A" strokeWidth="3" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: .6, delay: .2 }} /></svg>
+        <path
+  d="M14 27l8 8 16-17"
+  fill="none"
+  stroke="#B38A4A"
+  strokeWidth="3"
+/></svg>
       <h1 className="text-4xl font-black mt-8">اتسجّلت زيارتك</h1>
       <p className="text-brass text-2xl font-black mt-3 num">+{r!.points.toLocaleString("ar-EG")} نقطة</p>
       <div className="flex justify-center gap-2 mt-10" dir="ltr">
