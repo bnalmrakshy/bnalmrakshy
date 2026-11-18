@@ -15,7 +15,7 @@ export default function Home() {
       <section className="bg-espresso text-cream grain px-6 pt-14 pb-16 md:px-16 md:pt-24">
         <motion.div {...rise} className="max-w-xl">
           <p className="text-brass text-sm font-bold">المراكشي ستريك</p>
-          <h1 className="mt-5 text-[2.6rem] leading-[1.25] font-black md:text-6xl">كل زيارة<br />ترفع مقامك.</h1>
+          <h1 className="mt-5 text-[2.6rem] leading-[1.25] font-black md:text-6xl">كل زيارة<br />ترفع ترتيبك.</h1>
           <p className="mt-5 text-cream/75 leading-8">زورنا {T.toLocaleString("ar-EG")} أيام ورا بعض، ومشروبك يوم الجمعة علينا.</p>
           <div className="mt-8 flex gap-3">
             <Link href="/register" className="bg-brass text-espresso font-bold px-7 py-4 active:scale-[.97] transition">ابدأ الستريك</Link>
@@ -29,7 +29,7 @@ export default function Home() {
         ))}
       </section>
       <section className="px-6 py-12 md:px-16 max-w-3xl">
-        <div className="flex items-baseline justify-between"><h2 className="text-2xl font-black">أصحاب المقام</h2><Link href="/leaderboard" className="text-sm text-caramel font-semibold">القايمة كلها</Link></div>
+        <div className="flex items-baseline justify-between"><h2 className="text-2xl font-black">أصحاب الصدارة</h2><Link href="/leaderboard" className="text-sm text-caramel font-semibold">القايمة كلها</Link></div>
         {top === null ? <p className="mt-6 text-roast/60">بنحمّل القايمة...</p> : top.length === 0 ? <p className="mt-6 text-roast leading-8">لسه مفيش حد على القايمة. كن إنت الأول.</p> : (
           <ol className="mt-6">{top.map((r, i) => (
             <motion.li key={i} {...rise} transition={{ duration: .4, delay: i * .05 }} className={`flex items-center gap-4 py-4 border-b border-sand ${i < 3 ? "font-black" : "font-semibold"}`}>
