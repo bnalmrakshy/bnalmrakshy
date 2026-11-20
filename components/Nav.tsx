@@ -1,26 +1,39 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-const items = [["/", "الرئيسية"], ["/menu", "المنيو"], ["/scan", "مسح"], ["/leaderboard", "المتصدرين"], ["/club", "حسابي"]] as const;
+import { useEffect, useState } from "react";
+import Logo from "@/components/Logo";
+import Avatar from "@/components/Avatar";
+import Icon from "@/components/Icons";
+import { sb } from "@/lib/supabase";
+import { SOCIAL } from "@/lib/config";
+const tabs = [["/", "الرئيسية", "home"], ["/menu", "المنيو", "cup"], ["/scan", "مسح", "qr"], ["/leaderboard", "المتصدرين", "trophy"], ["/club", "حسابي", "user"]] as const;
 export default function Nav() {
-  const p = usePathname();
+  const p = usePathname(); const [av, setAv] = useState<string | null>(null); const [auth, setAuth] = useState(false);
+  useEffect(() => { sb.auth.getSession().then(async ({ data: { session } }) => {
+    setAuth(!!session); if (!session) return setAv(null);
+    const r = await sb.from("profiles").select("avatar_url").eq("id", session.user.id).single(); setAv(r.data?.avatar_url ?? null);
+  }); }, [p]);
   return (
     <>
-      <header className="hidden md:flex items-center justify-between px-10 py-5 border-b border-sand">
-        <Link href="/" className="text-xl font-black">المراكشي</Link>
-        <nav className="flex items-center gap-8 text-sm font-semibold">
-          {items.map(([h, l]) => h === "/scan"
-            ? <Link key={h} href={h} className="bg-espresso text-cream px-5 py-2 font-bold">سجّل زيارتك</Link>
-            : <Link key={h} href={h} className={p === h ? "text-caramel" : "text-roast"}>{l}</Link>)}
-        </nav>
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-sand pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto max-w-3xl h-14 px-5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-black text-lg"><Logo size={30} />المراكشي</Link>
+          <div className="flex items-center gap-3">
+            {SOCIAL.facebook && <a href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer" aria-label="فيسبوك" className="w-9 h-9 rounded-full bg-sand text-espresso grid place-items-center active:scale-90 transition"><Icon name="fb" size={18} /></a>}
+            <Link href={auth ? "/club" : "/login"} aria-label="حسابي" className="active:scale-90 transition"><Avatar url={av} size={36} /></Link>
+          </div>
+        </div>
       </header>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-espresso grid grid-cols-5 items-stretch pb-[env(safe-area-inset-bottom)]">
-        {items.map(([h, l]) => (
-          <Link key={h} href={h} className={`relative py-4 text-center text-[12px] font-semibold active:opacity-70 ${h === "/scan" ? "bg-brass text-espresso font-black" : p === h ? "text-brass" : "text-cream/80"}`}>
-            {p === h && h !== "/scan" && <span className="absolute top-0 inset-x-4 h-[3px] bg-brass" />}{l}
-          </Link>
-        ))}
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-sand rounded-t-3xl shadow-[0_-6px_24px_rgba(0,0,0,.07)] pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto max-w-lg grid grid-cols-5 items-end px-2">
+          {tabs.map(([h, l, ic]) => h === "/scan" ? (
+            <Link key={h} href={h} aria-label="مسح فاتورة" className="flex flex-col items-center pb-2 text-[11px] font-bold">
+              <span className="-mt-6 w-14 h-14 rounded-full bg-espresso text-cream grid place-items-center shadow-lg border-4 border-white active:scale-90 transition"><Icon name="qr" size={26} /></span>{l}</Link>
+          ) : (
+            <Link key={h} href={h} className={`flex flex-col items-center gap-1 py-3 text-[11px] font-bold active:scale-95 transition ${p === h ? "text-espresso" : "text-roast/50"}`}>
+              <Icon name={ic} size={23} />{l}{p === h && <span className="w-1 h-1 rounded-full bg-brass -mt-0.5" />}</Link>))}
+        </div>
       </nav>
-    </>
-  );
+    </>);
 }

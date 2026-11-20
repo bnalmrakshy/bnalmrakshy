@@ -1,6 +1,12 @@
 @tailwind base; @tailwind components; @tailwind utilities;
 html { background:#FFFFFF; color:#141414; -webkit-tap-highlight-color:transparent; }
-body { overflow-x:hidden; padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+body { overflow-x:hidden; padding-bottom:calc(96px + env(safe-area-inset-bottom)); overscroll-behavior-y:none; }
 .grain { background-image:radial-gradient(rgba(246,238,223,.06) 1px,transparent 1px); background-size:5px 5px; }
 .num { font-variant-numeric:tabular-nums; }
-@media (min-width:768px){ body{padding-bottom:0} }
+
+
+/* شكل التطبيق: حواف ناعمة وحقول مليانة */
+button:not([class*="rounded"]), a[class*="bg-espresso"], a[class*="bg-brass"], a[class*="border-espresso"], label[class*="border-espresso"] { border-radius: 14px; }
+input:not([type=checkbox]):not([type=file]):not([type=radio]), select { background:#F3EEEA !important; border:0 !important; border-radius:12px !important; padding:.8rem 1rem !important; }
+[role=dialog] > form { border-radius: 22px; }
+a, button { -webkit-touch-callout:none; }

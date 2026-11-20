@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Logo from "@/components/Logo";
 import { sb, emailOf, safeNext } from "@/lib/supabase";
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const reg = mode === "register";
@@ -25,7 +26,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const inp = "w-full bg-transparent border-b border-roast/30 py-3 text-lg outline-none focus:border-brass";
   return (
     <main className="min-h-[80vh] px-6 py-14 max-w-md mx-auto">
-      <p className="text-brass font-bold text-sm">المراكشي ستريك</p>
+      <Logo size={56} />
       <h1 className="text-4xl font-black mt-2">{reg ? "ابدأ الستريك" : "أهلًا بيك تاني"}</h1>
       {reg && <div className="mt-6 border border-sand p-4 text-sm leading-7 text-roast"><b>اليوزر مش إيميلك.</b> اختار اسم قصير بالإنجليزي من غير مسافات، زي ahmed12، وهتدخل بيه كل مرة. مفيش حاجة اسمها إيميل هنا. والباسورد لازم يجمع حروف إنجليزي وأرقام (٨ على الأقل).</div>}
       <form onSubmit={submit} className="mt-10 space-y-7">

@@ -1,55 +1,69 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Counter from "@/components/Counter";
-import { sb } from "@/lib/supabase";
-type Row = { display_name: string; points: number };
-const rise = { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: .5, ease: "easeOut" } } as const;
+import Icon from "@/components/Icons";
+import Logo from "@/components/Logo";
+import Footer from "@/components/Footer";
+import { sb, ar } from "@/lib/supabase";
+type Me = { display_name: string; role: string; streak: number };
+const SLIDES = [
+  { t: "٧ أيام ورا بعض", s: "مشروب الجمعة علينا", href: "/rewards", c: "bg-espresso text-cream" },
+  { t: "كل طلب بيجمعلك نقط", s: "والنقطة بجنيه", href: "/menu", c: "bg-roast text-cream" },
+  { t: "شوف المنيو", s: "واعرف باقيلك كام نقطة", href: "/menu", c: "bg-sand text-espresso" },
+];
+const ACTIONS = [["/menu", "المنيو", "cup"], ["/scan", "امسح فاتورة", "qr"], ["/leaderboard", "المتصدرين", "trophy"], ["/history", "مشترياتي", "receipt"]] as const;
 export default function Home() {
-  const [top, setTop] = useState<Row[] | null>(null); const [st, setSt] = useState<{ members: number; visits: number; target: number } | null>(null);
-  useEffect(() => { sb.rpc("get_leaderboard", { period: "all", lim: 5 }).then(r => setTop(r.data ?? [])); sb.rpc("get_stats").then(r => setSt(r.data)); }, []);
-  const T = st?.target ?? 7;
+  const [me, setMe] = useState<Me | null>(null); const [pts, setPts] = useState(0); const [target, setTarget] = useState(7); const [ready, setReady] = useState(false);
+  const [top, setTop] = useState<{ display_name: string; points: number }[] | null>(null); const [i, setI] = useState(0);
+  useEffect(() => { (async () => {
+    sb.rpc("get_leaderboard", { period: "all", lim: 5 }).then(r => setTop(r.data ?? []));
+    sb.from("app_settings").select("streak_target").single().then(r => r.data && setTarget(r.data.streak_target));
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const p = await sb.from("profiles").select("display_name,role,streak").eq("id", session.user.id).single(); if (p.data) setMe(p.data);
+      const l = await sb.from("points_ledger").select("delta").eq("member_id", session.user.id); setPts((l.data ?? []).reduce((a, x) => a + x.delta, 0));
+    }
+    setReady(true);
+  })(); }, []);
+  useEffect(() => { const t = setInterval(() => setI(x => (x + 1) % SLIDES.length), 4200); return () => clearInterval(t); }, []);
+  const sl = SLIDES[i]; const staff = me && me.role !== "member";
   return (
-    <main>
-      <section className="bg-espresso text-cream grain px-6 pt-14 pb-16 md:px-16 md:pt-24">
-        <motion.div {...rise} className="max-w-xl">
-          <p className="text-brass text-sm font-bold">المراكشي ستريك</p>
-          <h1 className="mt-5 text-[2.6rem] leading-[1.25] font-black md:text-6xl">كل زيارة<br />بتقرّبك من مشروبك.</h1>
-          <p className="mt-5 text-cream/75 leading-8">زورنا {T.toLocaleString("ar-EG")} أيام ورا بعض، ومشروبك يوم الجمعة علينا.</p>
-          <div className="mt-8 flex gap-3">
-            <Link href="/register" className="bg-brass text-espresso font-bold px-7 py-4 active:scale-[.97] transition">ابدأ الستريك</Link>
-            <Link href="/login" className="border border-cream/30 px-6 py-4 font-semibold active:scale-[.97] transition">دخول</Link>
-          </div>
-        </motion.div>
+    <main className="mx-auto max-w-lg px-5 pt-5 space-y-6">
+      {ready && (me ? <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <p className="text-sm text-roast mb-2">أهلًا، {me.display_name}</p>
+        {staff ? <Link href="/club" className="block rounded-3xl bg-espresso text-cream p-6 active:scale-[.98] transition"><p className="text-xl font-black">لوحة الإدارة</p><p className="text-cream/60 text-sm mt-1">فاتورة جديدة · الأعضاء · المنيو</p></Link>
+          : <div className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
+            <div className="absolute -left-6 -bottom-6 opacity-10"><Logo size={150} /></div>
+            <p className="text-cream/60 text-sm">رصيدك</p>
+            <p className="text-6xl font-black leading-tight"><Counter to={pts} /> <span className="text-lg font-bold text-brass">نقطة</span></p>
+            <div className="flex gap-1.5 mt-5" dir="ltr">{Array.from({ length: target }).map((_, k) => <span key={k} className={`h-2 flex-1 rounded-full ${k < me.streak ? "bg-brass" : "bg-cream/20"}`} />)}</div>
+            <p className="text-xs text-cream/60 mt-2">ستريك {ar(me.streak)} من {ar(target)}</p></div>}
+      </motion.section> : <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
+        <div className="absolute -left-6 -bottom-6 opacity-10"><Logo size={150} /></div>
+        <p className="text-2xl font-black leading-snug">كل زيارة بتقرّبك<br />من مشروبك.</p>
+        <div className="flex gap-3 mt-6"><Link href="/register" className="flex-1 bg-brass text-espresso font-black text-center py-3.5 active:scale-[.97] transition">ابدأ</Link><Link href="/login" className="flex-1 border border-cream/30 font-bold text-center py-3.5 active:scale-[.97] transition">دخول</Link></div>
+      </motion.section>)}
+
+      <section>
+        <AnimatePresence mode="wait"><motion.div key={i} initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }} transition={{ duration: .3 }}>
+          <Link href={sl.href} className={`block rounded-3xl p-6 h-32 relative overflow-hidden ${sl.c}`}>
+            <div className="absolute -left-4 -top-4 opacity-10"><Logo size={120} /></div>
+            <p className="text-2xl font-black">{sl.t}</p><p className="mt-1 opacity-70">{sl.s}</p></Link></motion.div></AnimatePresence>
+        <div className="flex justify-center gap-1.5 mt-3">{SLIDES.map((_, k) => <button key={k} onClick={() => setI(k)} aria-label={`بانر ${k + 1}`} className={`h-1.5 rounded-full transition-all ${k === i ? "w-6 bg-espresso" : "w-1.5 bg-roast/25"}`} />)}</div>
       </section>
-      <section className="px-6 py-10 grid grid-cols-2 gap-4 border-b border-sand md:px-16 max-w-3xl">
-        {[["عضو", st?.members], ["زيارة الشهر ده", st?.visits]].map(([l, n]) => (
-          <div key={l as string}><div className="text-3xl font-black text-roast">{n == null ? "–" : <Counter to={n as number} />}</div><div className="text-xs text-roast/70 mt-1">{l}</div></div>
-        ))}
+
+      <section className="grid grid-cols-4 gap-3">{ACTIONS.map(([h, l, ic]) => (
+        <Link key={h} href={h} className="rounded-2xl bg-sand py-4 flex flex-col items-center gap-2 text-[11px] font-bold text-center active:scale-95 transition"><Icon name={ic} size={26} />{l}</Link>))}</section>
+
+      <section>
+        <div className="flex items-center justify-between mb-3"><h2 className="font-black text-lg">المتصدرين</h2><Link href="/leaderboard" className="text-sm text-roast underline">الكل</Link></div>
+        {top === null ? <p className="text-roast/60">...</p> : top.length === 0 ? <p className="rounded-2xl bg-sand p-5 text-roast">لسه مفيش حد. كن الأول.</p> :
+          <ol className="rounded-2xl bg-sand overflow-hidden">{top.map((r, k) => (
+            <li key={k} className="flex items-center gap-3 px-4 py-3.5 border-b border-white last:border-0"><span className={`w-8 h-8 rounded-full grid place-items-center text-sm font-black num ${k === 0 ? "bg-espresso text-cream" : "bg-white"}`}>{ar(k + 1)}</span>
+              <span className="flex-1 font-bold">{r.display_name}</span><span className="num text-sm text-roast">{ar(r.points)}</span></li>))}</ol>}
       </section>
-      <section className="px-6 py-12 md:px-16 max-w-3xl">
-        <div className="flex items-baseline justify-between"><h2 className="text-2xl font-black">المتصدرين</h2><Link href="/leaderboard" className="text-sm text-caramel font-semibold">القايمة كلها</Link></div>
-        {top === null ? <p className="mt-6 text-roast/60">بنحمّل القايمة...</p> : top.length === 0 ? <p className="mt-6 text-roast leading-8">لسه مفيش حد على القايمة. كن إنت الأول.</p> : (
-          <ol className="mt-6">{top.map((r, i) => (
-            <motion.li key={i} {...rise} transition={{ duration: .4, delay: i * .05 }} className={`flex items-center gap-4 py-4 border-b border-sand ${i < 3 ? "font-black" : "font-semibold"}`}>
-              <span className={`w-8 text-2xl num ${i === 0 ? "text-brass" : i < 3 ? "text-caramel" : "text-roast/40"}`}>{(i + 1).toLocaleString("ar-EG")}</span>
-              <span className="flex-1">{r.display_name}</span><span className="num">{r.points.toLocaleString("ar-EG")}</span>
-            </motion.li>))}</ol>)}
-      </section>
-      <section className="bg-sand/60 px-6 py-12 md:px-16">
-        <h2 className="text-2xl font-black">الجمعة علينا</h2>
-        <div className="flex gap-2 mt-6" dir="ltr">{Array.from({ length: T }).map((_, i) => (
-          <motion.span key={i} initial={{ scale: .5, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * .08 }} className="w-8 h-8 rounded-full bg-brass" />))}</div>
-        <p className="mt-5 leading-8 max-w-md">{T.toLocaleString("ar-EG")} أيام ورا بعض = مشروب مجاني. بتستلمه يوم الجمعة بس. لو فوّتّ يوم، الستريك بيبدأ من الأول.</p>
-      </section>
-      <section className="px-6 py-12 md:px-16 max-w-3xl">
-        <h2 className="text-2xl font-black">إزاي بتشتغل؟</h2>
-        <ol className="mt-6 space-y-6">
-          {["اعمل حساب في دقيقة: اسم، يوزر، وباسورد.", "لما تيجي المحل، الكاشير يفتح التسجيل وإنت تمسح الكود بكاميرا موبايلك.", "تظهرلك زيارتك ونقاطك على طول، والستريك يكبر كل يوم."].map((t, i) => (
-            <li key={i} className="flex gap-4"><span className="text-4xl font-black text-brass/60 num">{(i + 1).toLocaleString("ar-EG")}</span><p className="pt-2 leading-7">{t}</p></li>))}
-        </ol>
-      </section>
-    </main>
-  );
+      <Footer />
+    </main>);
 }
