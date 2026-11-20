@@ -33,7 +33,8 @@ function Club({ me }: { me: Me }) {
         <div className="flex gap-2 mt-4" dir="ltr">{Array.from({ length: d.target }).map((_, i) => <span key={i} className={`w-8 h-8 rounded-full border ${i < me.streak ? "bg-brass border-brass" : "border-roast/30"}`} />)}</div>
         {d.pending > 0 && <Link href="/rewards" className="block mt-6 bg-brass text-espresso font-bold p-4">عندك {ar(d.pending)} مشروب مجاني مستني، يوم الجمعة تاخد كوده ←</Link>}
         <div className="mt-8 flex flex-col gap-3">
-          <Link href="/scan" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">امسح كود الكاشير وسجّل زيارتك</Link>
+          <Link href="/scan" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">امسح كود الفاتورة</Link>
+          <Link href="/history" className="border border-espresso text-center py-3 font-bold">سجل المشتريات</Link>
           {me.role !== "member" && <Link href="/staff" className="border border-espresso text-center py-3 font-bold">تأكيد مشروب الجمعة</Link>}
           {me.role === "admin" && <Link href="/admin" className="border border-espresso text-center py-3 font-bold">الإدارة وتوليد كود التسجيل</Link>}
         </div>
