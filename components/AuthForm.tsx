@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
 import { sb, emailOf, safeNext } from "@/lib/supabase";
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const reg = mode === "register";
@@ -32,7 +33,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
       <form onSubmit={submit} className="mt-10 space-y-7">
         {reg && <input className={inp} placeholder="اسمك اللي هيظهر للناس، مثال: محمد" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={24} />}
         <input className={inp} dir="ltr" style={{ textAlign: "right" }} placeholder={reg ? "اليوزر (مش إيميل) مثال: ahmed12" : "اليوزر"} autoCapitalize="none" autoComplete="username" value={f.user} onChange={e => setF({ ...f, user: e.target.value })} />
-        <input className={inp} dir="ltr" style={{ textAlign: "right" }} type="password" placeholder={reg ? "الباسورد: حروف إنجليزي + أرقام" : "الباسورد"} autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
+        <PasswordInput className={inp} placeholder={reg ? "الباسورد: حروف إنجليزي + أرقام" : "الباسورد"} autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
+        {reg && <ul className="text-xs space-y-1 -mt-3">{([["٨ حروف على الأقل", f.pass.length >= 8], ["حروف إنجليزي", /[A-Za-z]/.test(f.pass)], ["أرقام", /\d/.test(f.pass)]] as [string, boolean][]).map(([t, ok]) => <li key={t} className={ok ? "text-espresso font-bold" : "text-roast/50"}>{ok ? "✓" : "○"} {t}</li>)}</ul>}
         {err && <p role="alert" className="text-caramel font-semibold">{err}</p>}
         <button disabled={busy} className="w-full bg-espresso text-cream font-bold py-4 active:scale-[.98] transition disabled:opacity-50">{busy ? "لحظة..." : reg ? "إنشاء الحساب" : "دخول"}</button>
       </form>

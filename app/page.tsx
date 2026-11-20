@@ -6,6 +6,8 @@ import Counter from "@/components/Counter";
 import Icon from "@/components/Icons";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
+import Sk from "@/components/Skeleton";
+import StreakCups from "@/components/StreakCups";
 import { sb, ar } from "@/lib/supabase";
 type Me = { display_name: string; role: string; streak: number };
 const SLIDES = [
@@ -14,6 +16,7 @@ const SLIDES = [
   { t: "شوف المنيو", s: "واعرف باقيلك كام نقطة", href: "/menu", c: "bg-sand text-espresso" },
 ];
 const ACTIONS = [["/menu", "المنيو", "cup"], ["/scan", "امسح فاتورة", "qr"], ["/leaderboard", "المتصدرين", "trophy"], ["/history", "مشترياتي", "receipt"]] as const;
+const greet = () => { const h = +new Intl.DateTimeFormat("en", { hour: "numeric", hour12: false, timeZone: "Africa/Cairo" }).format(new Date()); return h < 12 ? "صباح الخير" : h < 18 ? "نهارك سعيد" : "مساء الخير"; };
 export default function Home() {
   const [me, setMe] = useState<Me | null>(null); const [pts, setPts] = useState(0); const [target, setTarget] = useState(7); const [ready, setReady] = useState(false);
   const [top, setTop] = useState<{ display_name: string; points: number }[] | null>(null); const [i, setI] = useState(0);
@@ -32,13 +35,13 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-lg px-5 pt-5 space-y-6">
       {ready && (me ? <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-sm text-roast mb-2">أهلًا، {me.display_name}</p>
+        <p className="text-sm text-roast mb-2">{greet()}، {me.display_name}</p>
         {staff ? <Link href="/club" className="block rounded-3xl bg-espresso text-cream p-6 active:scale-[.98] transition"><p className="text-xl font-black">لوحة الإدارة</p><p className="text-cream/60 text-sm mt-1">فاتورة جديدة · الأعضاء · المنيو</p></Link>
           : <div className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
             <div className="absolute -left-6 -bottom-6 opacity-10"><Logo size={150} /></div>
             <p className="text-cream/60 text-sm">رصيدك</p>
             <p className="text-6xl font-black leading-tight"><Counter to={pts} /> <span className="text-lg font-bold text-brass">نقطة</span></p>
-            <div className="flex gap-1.5 mt-5" dir="ltr">{Array.from({ length: target }).map((_, k) => <span key={k} className={`h-2 flex-1 rounded-full ${k < me.streak ? "bg-brass" : "bg-cream/20"}`} />)}</div>
+            <div className="mt-5"><StreakCups count={me.streak} target={target} /></div>
             <p className="text-xs text-cream/60 mt-2">ستريك {ar(me.streak)} من {ar(target)}</p></div>}
       </motion.section> : <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
         <div className="absolute -left-6 -bottom-6 opacity-10"><Logo size={150} /></div>
@@ -59,7 +62,7 @@ export default function Home() {
 
       <section>
         <div className="flex items-center justify-between mb-3"><h2 className="font-black text-lg">المتصدرين</h2><Link href="/leaderboard" className="text-sm text-roast underline">الكل</Link></div>
-        {top === null ? <p className="text-roast/60">...</p> : top.length === 0 ? <p className="rounded-2xl bg-sand p-5 text-roast">لسه مفيش حد. كن الأول.</p> :
+        {top === null ? <Sk className="h-52" /> : top.length === 0 ? <p className="rounded-2xl bg-sand p-5 text-roast">لسه مفيش حد. كن الأول.</p> :
           <ol className="rounded-2xl bg-sand overflow-hidden">{top.map((r, k) => (
             <li key={k} className="flex items-center gap-3 px-4 py-3.5 border-b border-white last:border-0"><span className={`w-8 h-8 rounded-full grid place-items-center text-sm font-black num ${k === 0 ? "bg-espresso text-cream" : "bg-white"}`}>{ar(k + 1)}</span>
               <span className="flex-1 font-bold">{r.display_name}</span><span className="num text-sm text-roast">{ar(r.points)}</span></li>))}</ol>}

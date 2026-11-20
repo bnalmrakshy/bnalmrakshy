@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Gate, { Me } from "@/components/Gate";
 import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icons";
+import PasswordInput from "@/components/PasswordInput";
 import { sb, logout } from "@/lib/supabase";
 const MSG: Record<string, string> = { "too soon": "تقدر تغيّر اليوزر مرة كل ٧ أيام.", taken: "اليوزر ده مستخدم.", "bad username": "اليوزر حروف إنجليزي وأرقام و _ فقط (٣ لـ ٢٠).", "bad name": "الاسم من ٢ لـ ٢٤ حرف." };
 function P({ me }: { me: Me }) {
@@ -56,8 +57,8 @@ function P({ me }: { me: Me }) {
       </form>
       <form onSubmit={changePw} className="mt-4 rounded-3xl bg-sand/60 p-5 space-y-4">
         <h2 className="font-black">الباسورد</h2>
-        <input className="w-full text-base" type="password" dir="ltr" autoComplete="new-password" placeholder="باسورد جديد (حروف + أرقام)" value={pw.a} onChange={e => setPw({ ...pw, a: e.target.value })} />
-        <input className="w-full text-base" type="password" dir="ltr" autoComplete="new-password" placeholder="أكّد الباسورد" value={pw.b} onChange={e => setPw({ ...pw, b: e.target.value })} />
+        <PasswordInput className="w-full text-base" autoComplete="new-password" placeholder="باسورد جديد (حروف + أرقام)" value={pw.a} onChange={e => setPw({ ...pw, a: e.target.value })} />
+        <PasswordInput className="w-full text-base" autoComplete="new-password" placeholder="أكّد الباسورد" value={pw.b} onChange={e => setPw({ ...pw, b: e.target.value })} />
         <button disabled={busy} className="w-full border border-espresso font-bold py-3.5 disabled:opacity-50 active:scale-[.98] transition">غيّر الباسورد</button>
         {pmsg && <p role="status" className="text-caramel font-semibold text-sm">{pmsg}</p>}
         <p className="text-xs text-roast/70 leading-6">نسيت باسوردك؟ اطلب من الإدارة تعيّن لك واحد جديد.</p>

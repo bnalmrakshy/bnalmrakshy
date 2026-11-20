@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import Logo from "@/components/Logo";
 import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icons";
@@ -31,8 +32,8 @@ export default function Nav() {
             <Link key={h} href={h} aria-label="مسح فاتورة" className="flex flex-col items-center pb-2 text-[11px] font-bold">
               <span className="-mt-6 w-14 h-14 rounded-full bg-espresso text-cream grid place-items-center shadow-lg border-4 border-white active:scale-90 transition"><Icon name="qr" size={26} /></span>{l}</Link>
           ) : (
-            <Link key={h} href={h} className={`flex flex-col items-center gap-1 py-3 text-[11px] font-bold active:scale-95 transition ${p === h ? "text-espresso" : "text-roast/50"}`}>
-              <Icon name={ic} size={23} />{l}{p === h && <span className="w-1 h-1 rounded-full bg-brass -mt-0.5" />}</Link>))}
+            <Link key={h} href={h} onClick={() => navigator.vibrate?.(8)} className={`relative flex flex-col items-center gap-1 py-3 text-[11px] font-bold active:scale-95 transition ${p === h ? "text-espresso" : "text-roast/50"}`}>
+              <Icon name={ic} size={23} />{l}{p === h && <motion.span layoutId="tab" transition={{ type: "spring", stiffness: 500, damping: 35 }} className="absolute top-1.5 inset-x-3 h-[52px] rounded-2xl bg-sand -z-10" />}</Link>))}
         </div>
       </nav>
     </>);

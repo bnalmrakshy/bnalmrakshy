@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Gate, { Me } from "@/components/Gate";
+import Sk from "@/components/Skeleton";
 import { sb, ar } from "@/lib/supabase";
 type Inv = { id: string; claimed_at: string; total: number; discount: number; points_earned: number; invoice_items: { name: string; qty: number; price: number }[] };
 function H({ me }: { me: Me }) {
@@ -13,7 +14,7 @@ function H({ me }: { me: Me }) {
     setRows(a.data as any); setBal((b.data ?? []).reduce((x, y) => x + y.delta, 0));
   })(); }, [me.id]);
   if (err) return <main className="px-6 py-20">مقدرناش نحمّل السجل. <button className="underline font-bold" onClick={() => location.reload()}>جرّب تاني</button></main>;
-  if (!rows) return <main className="min-h-[60vh] grid place-items-center text-roast">بنحمّل...</main>;
+  if (!rows) return <main className="mx-auto max-w-lg px-5 pt-5 space-y-3"><Sk className="h-44 rounded-3xl" />{[0, 1, 2].map(k => <Sk key={k} className="h-32" />)}</main>;
   const spent = rows.reduce((a, r) => a + r.total - r.discount, 0);
   return (
     <main className="mx-auto max-w-lg px-5 pt-5 pb-4">

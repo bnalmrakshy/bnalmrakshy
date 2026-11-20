@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Gate from "@/components/Gate";
+import PasswordInput from "@/components/PasswordInput";
 import InvoicePanel from "@/components/InvoicePanel";
 import MenuAdmin from "@/components/MenuAdmin";
 import { sb, ar } from "@/lib/supabase";
@@ -85,8 +86,8 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
         <form onSubmit={submitModal} className="bg-cream p-6 w-full max-w-sm space-y-4">
           <h2 className="text-xl font-black">{modal.k === "pw" ? "باسورد جديد" : "تأكيد الحذف"} لـ {modal.m.display_name}</h2>
           {modal.k === "pw" ? <>
-            <input type="password" dir="ltr" autoComplete="new-password" className={inp + " w-full"} placeholder="الباسورد الجديد" value={p1} onChange={e => setP1(e.target.value)} />
-            <input type="password" dir="ltr" autoComplete="new-password" className={inp + " w-full"} placeholder="تأكيد الباسورد" value={p2} onChange={e => setP2(e.target.value)} /></>
+            <PasswordInput autoComplete="new-password" className={inp + " w-full"} placeholder="الباسورد الجديد" value={p1} onChange={e => setP1(e.target.value)} />
+            <PasswordInput autoComplete="new-password" className={inp + " w-full"} placeholder="تأكيد الباسورد" value={p2} onChange={e => setP2(e.target.value)} /></>
             : <p className="leading-7">هيتحذف الحساب وكل زياراته ونقاطه نهائيًا، واليوزر هيبقى متاح تاني. متأكد؟</p>}
           {msg && <p className="text-caramel text-sm">{msg}</p>}
           <div className="flex gap-3"><button disabled={busy} className="flex-1 bg-espresso text-cream font-bold py-3 disabled:opacity-50">{busy ? "لحظة..." : modal.k === "pw" ? "حفظ" : "احذف"}</button>

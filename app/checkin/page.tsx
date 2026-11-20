@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Counter from "@/components/Counter";
+import StreakCups from "@/components/StreakCups";
 import { sb, ar } from "@/lib/supabase";
 type P = { total: number; points: number; balance: number; lines: { name: string; qty: number; price: number }[] };
 type R = { total: number; discount: number; paid: number; earned: number; streak: number; target: number; drink: boolean };
@@ -21,7 +23,7 @@ export default function CheckIn() {
   })(); }, []);
   async function claim(use: boolean) {
     setBusy(true); const { data, error } = await sb.rpc("claim_invoice", { tok, use_points: use }); setBusy(false);
-    if (error) { setM(why(error.message)); setS("err"); } else { setR(data); setS("done"); }
+    if (error) { setM(why(error.message)); setS("err"); } else { navigator.vibrate?.([30, 40, 30]); setR(data); setS("done"); }
   }
   if (s === "load") return <main className="min-h-[70vh] grid place-items-center text-roast">لحظة...</main>;
   if (s === "err") return <main className="px-6 py-20 max-w-md mx-auto"><h1 className="text-3xl font-black">مقدرناش نسجّل الفاتورة</h1><p className="mt-4 leading-8 text-roast">{m}</p></main>;
@@ -39,13 +41,12 @@ export default function CheckIn() {
   }
   return (
     <main className="bg-espresso text-cream min-h-[85vh] px-6 py-16 text-center">
-      <svg viewBox="0 0 52 52" className="w-24 mx-auto"><circle cx="26" cy="26" r="24" fill="none" stroke="#B07B52" strokeWidth="2" />
-        <motion.path d="M14 27l8 8 16-17" fill="none" stroke="#B07B52" strokeWidth="3" initial={{ pathLength: 0 } as any} animate={{ pathLength: 1 } as any} transition={{ duration: .6, delay: .2 }} /></svg>
+      <div className="relative w-24 mx-auto"><motion.span className="absolute inset-0 rounded-full border-2 border-brass" initial={{ scale: .8, opacity: .7 }} animate={{ scale: 1.9, opacity: 0 }} transition={{ duration: 1.3, repeat: 2 }} /><svg viewBox="0 0 52 52" className="w-24 mx-auto"><circle cx="26" cy="26" r="24" fill="none" stroke="#B07B52" strokeWidth="2" />
+        <motion.path d="M14 27l8 8 16-17" fill="none" stroke="#B07B52" strokeWidth="3" initial={{ pathLength: 0 } as any} animate={{ pathLength: 1 } as any} transition={{ duration: .6, delay: .2 }} /></svg></div>
       <h1 className="text-4xl font-black mt-8">اتسجّلت فاتورتك</h1>
       <p className="mt-4 text-cream/80 num">المطلوب دفعه {ar(r!.paid)} ج{r!.discount > 0 ? ` (بعد خصم ${ar(r!.discount)} نقطة)` : ""}</p>
-      <p className="text-brass text-2xl font-black mt-3 num">+{ar(r!.earned)} نقطة</p>
-      <div className="flex justify-center gap-2 mt-10" dir="ltr">{Array.from({ length: r!.target }).map((_, i) => (
-        <motion.span key={i} initial={{ scale: .6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: .5 + i * .06 }} className={`w-8 h-8 rounded-full border ${r!.drink || i < r!.streak ? "bg-brass border-brass" : "border-cream/30"}`} />))}</div>
+      <p className="text-brass text-2xl font-black mt-3 num">+<Counter to={r!.earned} /> نقطة</p>
+      <div className="mt-10 flex justify-center"><StreakCups count={r!.drink ? r!.target : r!.streak} target={r!.target} /></div>
       <p className="mt-6 leading-8 text-cream/80">{r!.drink ? "كملت الستريك! مشروبك المجاني مستنيك يوم الجمعة." : `ستريك ${ar(r!.streak)} من ${ar(r!.target)}.`}</p>
     </main>);
 }
