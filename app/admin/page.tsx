@@ -18,12 +18,14 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
   const [tab, setTab] = useState("invoice"); const [msg, setMsg] = useState(""); const [st, setSt] = useState<St | null>(null);
   const [q, setQ] = useState(""); const [roleF, setRoleF] = useState(""); const [statF, setStatF] = useState(""); const [sort, setSort] = useState("created_at");
   const [ms, setMs] = useState<M[] | null>(null); const [open, setOpen] = useState(""); const [det, setDet] = useState<string[]>([]);
-  const [audit, setAudit] = useState<any[]>([]); const [cfg, setCfg] = useState({ pts: 10, target: 7 });
+  const [audit, setAudit] = useState<any[]>([]); const [cfg, setCfg] = useState({ pts: 10, target: 7 }); const [orph, setOrph] = useState<{ id: string; email: string; created_at: string }[]>([]);
   const [modal, setModal] = useState<{ k: "pw" | "del"; m: M } | null>(null); const [p1, setP1] = useState(""); const [p2, setP2] = useState(""); const [busy, setBusy] = useState(false);
   const fail = (e: { message: string }) => { setMsg("حصلت مشكلة: " + e.message); return false; };
   const loadStats = useCallback(() => { sb.rpc("admin_stats").then(r => r.error ? fail(r.error) : setSt(r.data)); }, []);
   const members = useCallback(async (s = "") => { const r = await sb.rpc("admin_members", { q: s }); r.error ? fail(r.error) : setMs(r.data); }, []);
   useEffect(() => { loadStats(); members(); sb.from("app_settings").select("points_per_visit,streak_target").single().then(r => r.data && setCfg({ pts: r.data.points_per_visit, target: r.data.streak_target })); }, [loadStats, members]);
+  const loadOrph = useCallback(() => { sb.rpc("admin_orphan_accounts").then(r => { if (!r.error) setOrph(r.data); }); }, []);
+  useEffect(() => { loadOrph(); }, [loadOrph]);
   useEffect(() => { if (tab === "audit") sb.rpc("admin_audit", { lim: 50 }).then(r => r.error ? fail(r.error) : setAudit(r.data)); }, [tab]);
   const shown = useMemo(() => (ms ?? []).filter(m => (!roleF || m.role === roleF) && (!statF || (statF === "sus") === m.suspended))
     .sort((a, b) => sort === "created_at" ? +new Date(b.created_at) - +new Date(a.created_at) : (b as any)[sort] - (a as any)[sort]), [ms, roleF, statF, sort]);
@@ -32,9 +34,9 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
   async function submitModal(e: React.FormEvent) {
     e.preventDefault(); if (!modal) return; setMsg("");
     if (modal.k === "pw" && (p1.length < 8 || p1.length > 72 || !/[A-Za-z]/.test(p1) || !/\d/.test(p1) || p1 !== p2)) return setMsg("الباسورد ٨ على الأقل بحروف إنجليزي وأرقام، ولازم يتطابق مع التأكيد.");
-    setBusy(true); const err = await api(modal.k === "pw" ? "/api/admin/password" : "/api/admin/delete", modal.k === "pw" ? { userId: modal.m.id, password: p1 } : { userId: modal.m.id }); setBusy(false);
-    if (err) return setMsg(err);
-    setMsg(modal.k === "pw" ? "اتغيّر الباسورد." : "اتحذف الحساب."); setModal(null); setP1(""); setP2(""); members(q); loadStats();
+    setBusy(true); const rr = modal.k === "pw" ? await sb.rpc("admin_set_password", { uid: modal.m.id, pw: p1 }) : await sb.rpc("admin_delete_user", { uid: modal.m.id }); setBusy(false);
+    if (rr.error) return setMsg("فشلت العملية: " + rr.error.message);
+    setMsg(modal.k === "pw" ? "اتغيّر الباسورد." : "اتحذف الحساب."); setModal(null); setP1(""); setP2(""); members(q); loadStats(); loadOrph();
   }
   const save = async (e: React.FormEvent) => { e.preventDefault(); if (await rpc("admin_update_settings", { pts: cfg.pts, target: cfg.target })) setMsg("اتحفظت. الستريك الشغّال بيكمل بالهدف الجديد."); };
   const inp = "border-b border-roast/30 bg-transparent py-2 outline-none focus:border-brass";
@@ -53,9 +55,12 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
           <select className={inp} value={roleF} onChange={e => setRoleF(e.target.value)}><option value="">كل الأدوار</option><option value="member">أعضاء</option><option value="staff">موظفين</option><option value="admin">أدمن</option></select>
           <select className={inp} value={statF} onChange={e => setStatF(e.target.value)}><option value="">كل الحالات</option><option value="act">نشط</option><option value="sus">موقوف</option></select>
           <select className={inp} value={sort} onChange={e => setSort(e.target.value)}><option value="created_at">الأحدث</option><option value="points">النقاط</option><option value="visits">الزيارات</option></select></form>
+        {orph.length > 0 && <div className="mt-6 rounded-2xl border border-caramel p-4"><p className="font-black">حسابات ناقصة (من غير بروفايل)</p><p className="text-xs text-roast/70 mt-1">دي حسابات اتعملت وبقى ليها يوزر محجوز. احذفها عشان اليوزر يتحرر.</p>
+          {orph.map(o => <div key={o.id} className="flex items-center justify-between gap-3 mt-3 text-sm"><span dir="ltr" className="truncate">{o.email}</span>
+            <button onClick={async () => { if (!confirm("حذف الحساب ده نهائيًا؟")) return; const r = await sb.rpc("admin_delete_user", { uid: o.id }); if (r.error) setMsg("فشل الحذف: " + r.error.message); else { setMsg("اتحذف."); loadOrph(); loadStats(); } }} className="underline text-caramel font-bold shrink-0">حذف</button></div>)}</div>}
         {ms === null ? <p className="mt-6 text-roast/60">بنحمّل...</p> : shown.length === 0 ? <p className="mt-6">مفيش نتائج.</p> :
           <ul className="mt-4">{shown.map(m => (
-            <li key={m.id} className="py-4 border-b border-sand">
+            <li key={m.id} className="rounded-2xl bg-sand/60 p-4 mb-3">
               <button onClick={() => toggle(m)} className="w-full text-right">
                 <span className="font-bold">{m.display_name}</span> <span className="text-xs text-roast/60" dir="ltr">@{m.username}</span>
                 <span className="text-xs mx-2 text-brass font-bold">{RL[m.role]}</span>{m.suspended && <span className="text-xs text-caramel">موقوف</span>}
@@ -69,7 +74,7 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
                   <button onClick={() => setModal({ k: "del", m })} className="underline text-caramel">حذف</button></div> : <p className="mt-2 text-roast/60">حسابات الأدمن محمية من التعديل هنا.</p>}
               </div>}
             </li>))}</ul>}</section>}
-      {tab === "audit" && <ul className="mt-6 text-sm">{audit.length === 0 ? <p>السجل فاضي.</p> : audit.map(r => <li key={r.id} className="py-3 border-b border-sand">
+      {tab === "audit" && <ul className="mt-6 text-sm">{audit.length === 0 ? <p>السجل فاضي.</p> : audit.map(r => <li key={r.id} className="rounded-2xl bg-sand/60 p-4 mb-2">
         <b>{ACT[r.action] ?? r.action}</b> · {r.actor_name ?? "نظام"}{r.target_name ? ` ← ${r.target_name}` : ""}
         <span className="block text-xs text-roast/60 num" dir="ltr" style={{ textAlign: "right" }}>{new Date(r.created_at).toLocaleString("en-GB", { timeZone: "Africa/Cairo" })}</span></li>)}</ul>}
       {tab === "settings" && <form onSubmit={save} className="mt-6 space-y-6 max-w-xs">

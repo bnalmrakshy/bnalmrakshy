@@ -4,6 +4,7 @@ import Link from "next/link";
 import Gate, { Me } from "@/components/Gate";
 import Hub from "@/components/Hub";
 import Avatar from "@/components/Avatar";
+import Logo from "@/components/Logo";
 import { sb, logout, ar } from "@/lib/supabase";
 type D = { points: number; visits: number; rank: number | null; target: number; days: string[]; pending: number };
 function Club({ me }: { me: Me }) {
@@ -23,12 +24,18 @@ function Club({ me }: { me: Me }) {
   if (!d) return <main className="min-h-[60vh] grid place-items-center text-roast">بنحمّل حسابك...</main>;
   return (
     <main>
-      <section className="bg-espresso text-cream grain px-6 py-12 md:px-16">
-        <div className="mb-4"><Avatar url={me.avatar_url} size={72} /></div>
-        <p className="text-brass text-sm font-bold" dir="ltr" style={{ textAlign: "right" }}>@{me.username}</p>
-        <h1 className="text-4xl font-black mt-1">{me.display_name}</h1>
-        <div className="grid grid-cols-3 gap-4 mt-8 max-w-md">
-          {[["نقطة", d.points], ["زيارة", d.visits], ["ترتيبك", d.rank ?? "–"]].map(([l, n]) => <div key={l as string}><div className="text-3xl font-black num">{typeof n === "number" ? ar(n) : n}</div><div className="text-xs text-cream/70">{l}</div></div>)}
+      <section className="px-5 pt-6 max-w-lg mx-auto">
+        <div className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
+          <div className="absolute -left-8 -top-8 opacity-10"><Logo size={170} /></div>
+          <div className="flex items-center gap-4 relative">
+            <Link href="/profile" aria-label="تعديل حسابي"><span className="block rounded-full ring-4 ring-brass"><Avatar url={me.avatar_url} size={84} /></span></Link>
+            <div className="min-w-0"><h1 className="text-2xl font-black truncate">{me.display_name}</h1>
+              <div className="mt-1.5 flex flex-wrap gap-2 items-center"><span className="text-xs bg-white/10 rounded-full px-3 py-1" dir="ltr">@{me.username}</span>
+                <span className="text-xs bg-brass text-espresso font-black rounded-full px-3 py-1">{d.visits >= 20 ? "من أهل البيت" : d.visits >= 5 ? "زبون ثابت" : "ضيف جديد"}</span></div></div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-6 relative">
+            {[["نقطة", d.points], ["زيارة", d.visits], ["ترتيبك", d.rank ?? "–"]].map(([l, n]) => <div key={l as string} className="rounded-2xl bg-white/10 py-3 text-center"><div className="text-3xl font-black num">{typeof n === "number" ? ar(n) : n}</div><div className="text-xs text-cream/70 mt-0.5">{l}</div></div>)}
+          </div>
         </div>
       </section>
       <section className="px-6 py-10 md:px-16 max-w-xl">
