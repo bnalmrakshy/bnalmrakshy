@@ -2,18 +2,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Gate from "@/components/Gate";
 import InvoicePanel from "@/components/InvoicePanel";
+import MenuAdmin from "@/components/MenuAdmin";
 import { sb, ar } from "@/lib/supabase";
 type M = { id: string; username: string; display_name: string; role: string; suspended: boolean; streak: number; points: number; visits: number; created_at: string };
 type St = { members: number; visits: number; points: number; drinks: number; staff: number; suspended: number; target: number };
-const T = [["invoice", "فاتورة جديدة"], ["members", "الأعضاء"], ["audit", "السجل"], ["settings", "الإعدادات"]];
-const RL: Record<string, string> = { member: "عضو", staff: "موظف", admin: "أدمن" };
+const T = [["invoice", "فاتورة جديدة"], ["menu", "المنيو"], ["members", "الأعضاء"], ["audit", "السجل"], ["settings", "الإعدادات"]];
+const RL: Record<string, string> = { member: "عضو", staff: "موظف", admin: "أدمن", developer: "مطوّر" };
 const ACT: Record<string, string> = { set_role: "تغيير دور", set_suspended: "إيقاف/تفعيل", update_settings: "تعديل الإعدادات", admin_set_password: "تغيير باسورد", admin_delete_user: "حذف حساب", admin_delete_failed: "فشل حذف", open_session: "فتح تسجيل", close_session: "قفل تسجيل", use_drink: "تأكيد مشروب" };
 async function api(path: string, body: object) {
   const { data: { session } } = await sb.auth.getSession();
   const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({})); return r.ok ? null : (j.error ?? "فشلت العملية") as string;
 }
-function Admin({ meId }: { meId: string }) {
+function Admin({ meId, dev }: { meId: string; dev: boolean }) {
   const [tab, setTab] = useState("invoice"); const [msg, setMsg] = useState(""); const [st, setSt] = useState<St | null>(null);
   const [q, setQ] = useState(""); const [roleF, setRoleF] = useState(""); const [statF, setStatF] = useState(""); const [sort, setSort] = useState("created_at");
   const [ms, setMs] = useState<M[] | null>(null); const [open, setOpen] = useState(""); const [det, setDet] = useState<string[]>([]);
@@ -45,6 +46,7 @@ function Admin({ meId }: { meId: string }) {
       <div className="flex gap-1 mt-8 overflow-x-auto">{T.map(([k, l]) => <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 font-bold border-b-2 whitespace-nowrap ${tab === k ? "border-brass" : "border-transparent text-roast/60"}`}>{l}</button>)}</div>
       {msg && <p role="status" className="mt-4 text-caramel font-semibold">{msg}</p>}
       {tab === "invoice" && <InvoicePanel />}
+      {tab === "menu" && <MenuAdmin />}
       {tab === "members" && <section className="mt-6">
         <form onSubmit={e => { e.preventDefault(); members(q); }} className="flex flex-wrap gap-3">
           <input className={inp + " flex-1 min-w-[10rem]"} placeholder="ابحث بالاسم أو اليوزر" value={q} onChange={e => setQ(e.target.value)} />
@@ -60,7 +62,7 @@ function Admin({ meId }: { meId: string }) {
                 <div className="text-xs text-roast/70 num">{ar(m.points)} نقطة · {ar(m.visits)} زيارة · ستريك {ar(m.streak)} · سجّل {new Date(m.created_at).toLocaleDateString("ar-EG", { timeZone: "Africa/Cairo" })}</div></button>
               {open === m.id && <div className="mt-3 text-sm bg-sand/50 p-4">
                 <p className="text-roast/70">آخر زيارات: {det.length ? det.map(d => ar(d)).join(" · ") : "لسه مفيش"}</p>
-                {m.role !== "admin" && m.id !== meId ? <div className="mt-3 flex flex-wrap items-center gap-4">
+                {m.role !== "developer" && m.id !== meId && (m.role !== "admin" || dev) ? <div className="mt-3 flex flex-wrap items-center gap-4">
                   <select value={m.role} onChange={e => rpc("admin_set_role", { uid: m.id, r: e.target.value })} className={inp}><option value="member">عضو</option><option value="staff">موظف</option><option value="admin">أدمن</option></select>
                   <button onClick={() => rpc("admin_set_suspended", { uid: m.id, s: !m.suspended })} className="underline">{m.suspended ? "إعادة تفعيل" : "إيقاف"}</button>
                   <button onClick={() => setModal({ k: "pw", m })} className="underline">تغيير الباسورد</button>
@@ -87,4 +89,4 @@ function Admin({ meId }: { meId: string }) {
         </form></div>}
     </main>);
 }
-export default function Page() { return <Gate need="admin">{me => <Admin meId={me.id} />}</Gate>; }
+export default function Page() { return <Gate need="admin">{me => <Admin meId={me.id} dev={me.role === "developer"} />}</Gate>; }

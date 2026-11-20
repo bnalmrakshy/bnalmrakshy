@@ -12,7 +12,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     if (reg && !(f.pass.length >= 8 && /[A-Za-z]/.test(f.pass) && /\d/.test(f.pass))) return setErr("الباسورد لازم ٨ على الأقل، وفيه حروف إنجليزي وأرقام مع بعض.");
     if (!reg && !f.pass) return setErr("اكتب الباسورد.");
     setBusy(true);
-    const email = emailOf(f.user);
+    const email = reg ? emailOf(f.user) : (((await sb.rpc("login_email", { u: f.user })).data as string | null) ?? emailOf(f.user));
     const { data, error } = reg
       ? await sb.auth.signUp({ email, password: f.pass, options: { data: { username: f.user.toLowerCase(), display_name: f.name.trim() } } })
       : await sb.auth.signInWithPassword({ email, password: f.pass });

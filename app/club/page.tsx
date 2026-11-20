@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Gate, { Me } from "@/components/Gate";
+import Hub from "@/components/Hub";
+import Avatar from "@/components/Avatar";
 import { sb, logout, ar } from "@/lib/supabase";
 type D = { points: number; visits: number; rank: number | null; target: number; days: string[]; pending: number };
 function Club({ me }: { me: Me }) {
@@ -22,6 +24,7 @@ function Club({ me }: { me: Me }) {
   return (
     <main>
       <section className="bg-espresso text-cream grain px-6 py-12 md:px-16">
+        <div className="mb-4"><Avatar url={me.avatar_url} size={72} /></div>
         <p className="text-brass text-sm font-bold" dir="ltr" style={{ textAlign: "right" }}>@{me.username}</p>
         <h1 className="text-4xl font-black mt-1">{me.display_name}</h1>
         <div className="grid grid-cols-3 gap-4 mt-8 max-w-md">
@@ -34,6 +37,7 @@ function Club({ me }: { me: Me }) {
         {d.pending > 0 && <Link href="/rewards" className="block mt-6 bg-brass text-espresso font-bold p-4">عندك {ar(d.pending)} مشروب مجاني مستني، يوم الجمعة تاخد كوده ←</Link>}
         <div className="mt-8 flex flex-col gap-3">
           <Link href="/scan" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">امسح كود الفاتورة</Link>
+          <Link href="/profile" className="border border-espresso text-center py-3 font-bold">تعديل حسابي</Link>
           <Link href="/history" className="border border-espresso text-center py-3 font-bold">سجل المشتريات</Link>
           {me.role !== "member" && <Link href="/staff" className="border border-espresso text-center py-3 font-bold">تأكيد مشروب الجمعة</Link>}
           {me.role === "admin" && <Link href="/admin" className="border border-espresso text-center py-3 font-bold">الإدارة وتوليد كود التسجيل</Link>}
@@ -45,4 +49,4 @@ function Club({ me }: { me: Me }) {
       </section>
     </main>);
 }
-export default function Page() { return <Gate>{me => <Club me={me} />}</Gate>; }
+export default function Page() { return <Gate>{me => me.role === "member" ? <Club me={me} /> : <Hub me={me} />}</Gate>; }

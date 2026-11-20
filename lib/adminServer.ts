@@ -14,7 +14,7 @@ export async function requireAdmin(req: Request) {
   const { data: { user } } = await s.auth.getUser(tok);
   if (!user) return null;
   const { data: p } = await s.from("profiles").select("role,suspended").eq("id", user.id).single();
-  return p && p.role === "admin" && !p.suspended ? { s, uid: user.id } : null;
+  return p && (p.role === "admin" || p.role === "developer") && !p.suspended ? { s, uid: user.id, role: p.role as string } : null;
 }
 export async function target(s: ReturnType<typeof svc>, id: string) {
   const { data } = await s.from("profiles").select("id,username,role").eq("id", id).single();

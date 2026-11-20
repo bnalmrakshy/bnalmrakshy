@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sb, logout } from "@/lib/supabase";
-export type Me = { id: string; username: string; display_name: string; role: string; streak: number; suspended: boolean };
+export type Me = { id: string; username: string; display_name: string; role: string; streak: number; suspended: boolean; avatar_url: string | null };
 export default function Gate({ need, soft, children }: { need?: "staff" | "admin"; soft?: boolean; children: (me: Me) => React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null); const [st, setSt] = useState<"load" | "guest" | "err" | "deny" | "ok">("load");
   const [em, setEm] = useState("");
@@ -10,9 +10,9 @@ export default function Gate({ need, soft, children }: { need?: "staff" | "admin
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { if (soft) return setSt("guest"); location.href = `/login?next=${encodeURIComponent(location.pathname)}`; return; }
     await sb.rpc("ensure_profile");
-    const { data, error } = await sb.from("profiles").select("id,username,display_name,role,streak,suspended").eq("id", session.user.id).single();
+    const { data, error } = await sb.from("profiles").select("id,username,display_name,role,streak,suspended,avatar_url").eq("id", session.user.id).single();
     if (error || !data) { setEm(error?.message ?? "مفيش بروفايل للحساب ده"); return setSt("err"); }
-    const ok = !need || (need === "staff" ? data.role !== "member" : data.role === "admin");
+    const ok = !need || (need === "staff" ? data.role !== "member" : (data.role === "admin" || data.role === "developer"));
     if (data.suspended || !ok) return setSt("deny");
     setMe(data); setSt("ok");
   })(); }, [need, soft]);
