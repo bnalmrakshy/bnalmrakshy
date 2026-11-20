@@ -1,5 +1,5 @@
 @tailwind base; @tailwind components; @tailwind utilities;
-html { background:#F6EEDF; color:#2A1912; -webkit-tap-highlight-color:transparent; }
+html { background:#FFFFFF; color:#141414; -webkit-tap-highlight-color:transparent; }
 body { overflow-x:hidden; padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
 .grain { background-image:radial-gradient(rgba(246,238,223,.06) 1px,transparent 1px); background-size:5px 5px; }
 .num { font-variant-numeric:tabular-nums; }

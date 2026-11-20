@@ -9,7 +9,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     e.preventDefault(); setErr("");
     if (reg && !/^[a-z0-9_]{3,20}$/i.test(f.user)) return setErr("اليوزر حروف إنجليزي وأرقام و _ فقط (٣ لـ ٢٠).");
     if (reg && f.name.trim().length < 2) return setErr("اكتب اسم العرض.");
-    if (f.pass.length < 8) return setErr("الباسورد لازم ٨ حروف على الأقل.");
+    if (reg && !(f.pass.length >= 8 && /[A-Za-z]/.test(f.pass) && /\d/.test(f.pass))) return setErr("الباسورد لازم ٨ على الأقل، وفيه حروف إنجليزي وأرقام مع بعض.");
+    if (!reg && !f.pass) return setErr("اكتب الباسورد.");
     setBusy(true);
     const email = emailOf(f.user);
     const { data, error } = reg
@@ -26,10 +27,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     <main className="min-h-[80vh] px-6 py-14 max-w-md mx-auto">
       <p className="text-brass font-bold text-sm">المراكشي ستريك</p>
       <h1 className="text-4xl font-black mt-2">{reg ? "ابدأ الستريك" : "أهلًا بيك تاني"}</h1>
+      {reg && <div className="mt-6 border border-sand p-4 text-sm leading-7 text-roast"><b>اليوزر مش إيميلك.</b> اختار اسم قصير بالإنجليزي من غير مسافات، زي ahmed12، وهتدخل بيه كل مرة. مفيش حاجة اسمها إيميل هنا. والباسورد لازم يجمع حروف إنجليزي وأرقام (٨ على الأقل).</div>}
       <form onSubmit={submit} className="mt-10 space-y-7">
-        {reg && <input className={inp} placeholder="اسمك اللي هيظهر" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={24} />}
-        <input className={inp} dir="ltr" style={{ textAlign: "right" }} placeholder="اليوزر" autoCapitalize="none" autoComplete="username" value={f.user} onChange={e => setF({ ...f, user: e.target.value })} />
-        <input className={inp} dir="ltr" style={{ textAlign: "right" }} type="password" placeholder="الباسورد" autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
+        {reg && <input className={inp} placeholder="اسمك اللي هيظهر للناس، مثال: محمد" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={24} />}
+        <input className={inp} dir="ltr" style={{ textAlign: "right" }} placeholder={reg ? "اليوزر (مش إيميل) مثال: ahmed12" : "اليوزر"} autoCapitalize="none" autoComplete="username" value={f.user} onChange={e => setF({ ...f, user: e.target.value })} />
+        <input className={inp} dir="ltr" style={{ textAlign: "right" }} type="password" placeholder={reg ? "الباسورد: حروف إنجليزي + أرقام" : "الباسورد"} autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
         {err && <p role="alert" className="text-caramel font-semibold">{err}</p>}
         <button disabled={busy} className="w-full bg-espresso text-cream font-bold py-4 active:scale-[.98] transition disabled:opacity-50">{busy ? "لحظة..." : reg ? "إنشاء الحساب" : "دخول"}</button>
       </form>

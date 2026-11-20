@@ -11,7 +11,7 @@ export default function LB() {
   const tab = (a: boolean) => `px-4 py-2 font-bold border-b-2 ${a ? "border-brass text-espresso" : "border-transparent text-roast/60"}`;
   return (
     <main className="px-6 py-12 md:px-16 max-w-3xl">
-      <h1 className="text-4xl font-black">أصحاب المقام</h1>
+      <h1 className="text-4xl font-black">المتصدرين</h1>
       <div className="flex gap-1 mt-6">{P.map(([k, l]) => <button key={k} onClick={() => setP(k)} className={tab(p === k)}>{l}</button>)}</div>
       {err ? <p className="mt-8">مقدرناش نحمّل القايمة. <button className="underline font-bold" onClick={() => setN(n + 1)}>جرّب تاني</button></p>
         : rows === null ? <p className="mt-8 text-roast/60">بنحمّل...</p>

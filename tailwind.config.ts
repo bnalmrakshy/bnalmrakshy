@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 export default {
   content: ["./app/**/*.tsx", "./components/**/*.tsx"],
   theme: { extend: {
-    colors: { espresso:"#2A1912", roast:"#4A2E20", cream:"#F6EEDF", sand:"#E6D6BC", brass:"#B38A4A", caramel:"#C47A3D" },
+    colors: { espresso:"#141414", roast:"#4A2F20", cream:"#FFFFFF", sand:"#EDE6E0", brass:"#B07B52", caramel:"#9C6B45" },
     fontFamily: { sans: ["var(--font-cairo)", "system-ui", "sans-serif"] },
   } },
 } satisfies Config;

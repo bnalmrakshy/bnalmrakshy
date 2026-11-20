@@ -30,7 +30,7 @@ function Admin({ meId }: { meId: string }) {
   async function toggle(m: M) { setOpen(open === m.id ? "" : m.id); setDet([]); if (open !== m.id) { const r = await sb.from("checkins").select("day").eq("member_id", m.id).order("day", { ascending: false }).limit(5); setDet((r.data ?? []).map(x => x.day)); } }
   async function submitModal(e: React.FormEvent) {
     e.preventDefault(); if (!modal) return; setMsg("");
-    if (modal.k === "pw" && (p1.length < 8 || p1.length > 72 || p1 !== p2)) return setMsg("الباسورد ٨ حروف على الأقل ولازم يتطابق مع التأكيد.");
+    if (modal.k === "pw" && (p1.length < 8 || p1.length > 72 || !/[A-Za-z]/.test(p1) || !/\d/.test(p1) || p1 !== p2)) return setMsg("الباسورد ٨ على الأقل بحروف إنجليزي وأرقام، ولازم يتطابق مع التأكيد.");
     setBusy(true); const err = await api(modal.k === "pw" ? "/api/admin/password" : "/api/admin/delete", modal.k === "pw" ? { userId: modal.m.id, password: p1 } : { userId: modal.m.id }); setBusy(false);
     if (err) return setMsg(err);
     setMsg(modal.k === "pw" ? "اتغيّر الباسورد." : "اتحذف الحساب."); setModal(null); setP1(""); setP2(""); members(q); loadStats();

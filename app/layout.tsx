@@ -4,7 +4,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Motion from "@/components/Motion";
 const cairo = Cairo({ subsets: ["arabic","latin"], variable: "--font-cairo", display: "swap" });
-export const metadata = { title: "المراكشي ستريك", description: "كل زيارة تعلي صدارتك." };
+export const metadata = { title: "المراكشي ستريك", description: "كل زيارة بتقرّبك من مشروبك." };
 export const viewport = { themeColor: "#2A1912", viewportFit: "cover" as const };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

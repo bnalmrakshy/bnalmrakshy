@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-const items = [["/", "الرئيسية"], ["/leaderboard", "المتصدرين"], ["/scan", "مسح"], ["/rewards", "المكافآت"], ["/club", "حسابي"]] as const;
+const items = [["/", "الرئيسية"], ["/menu", "المنيو"], ["/scan", "مسح"], ["/leaderboard", "المتصدرين"], ["/club", "حسابي"]] as const;
 export default function Nav() {
   const p = usePathname();
   return (
