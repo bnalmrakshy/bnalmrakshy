@@ -8,7 +8,7 @@ import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icons";
 import { sb } from "@/lib/supabase";
 import { SOCIAL } from "@/lib/config";
-const tabs = [["/", "الرئيسية", "home"], ["/menu", "المنيو", "cup"], ["/scan", "مسح", "qr"], ["/leaderboard", "المتصدرين", "trophy"], ["/club", "حسابي", "user"]] as const;
+const tabs = [["/", "الرئيسية", "home"], ["/menu", "المنيو", "cup"], ["/scan", "مسح", "qr"], ["/leaderboard", "الدوري", "trophy"], ["/club", "حسابي", "user"]] as const;
 export default function Nav() {
   const p = usePathname(); const [av, setAv] = useState<string | null>(null); const [auth, setAuth] = useState(false);
   useEffect(() => { sb.auth.getSession().then(async ({ data: { session } }) => {
@@ -18,15 +18,16 @@ export default function Nav() {
   return (
     <>
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-sand pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto max-w-3xl h-14 px-5 flex items-center justify-between">
+        <div className="mx-auto max-w-6xl lg:px-8 h-14 px-5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-lg"><Logo size={30} />المراكشي</Link>
+          <nav className="hidden lg:flex items-center gap-1">{tabs.map(([h, l]) => <Link key={h} href={h} className={`px-4 py-2 rounded-xl text-sm font-bold transition ${p === h ? "bg-sand text-espresso" : "text-roast hover:bg-sand/60"}`}>{l}</Link>)}</nav>
           <div className="flex items-center gap-3">
             {SOCIAL.facebook && <a href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer" aria-label="فيسبوك" className="w-9 h-9 rounded-full bg-sand text-espresso grid place-items-center active:scale-90 transition"><Icon name="fb" size={18} /></a>}
             <Link href={auth ? "/club" : "/login"} aria-label="حسابي" className="active:scale-90 transition"><Avatar url={av} size={36} /></Link>
           </div>
         </div>
       </header>
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-sand rounded-t-3xl shadow-[0_-6px_24px_rgba(0,0,0,.07)] pb-[env(safe-area-inset-bottom)]">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-sand rounded-t-3xl shadow-[0_-6px_24px_rgba(0,0,0,.07)] pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto max-w-lg grid grid-cols-5 items-end px-2">
           {tabs.map(([h, l, ic]) => h === "/scan" ? (
             <Link key={h} href={h} aria-label="مسح فاتورة" className="flex flex-col items-center pb-2 text-[11px] font-bold">

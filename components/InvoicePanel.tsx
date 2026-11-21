@@ -26,7 +26,7 @@ export default function InvoicePanel() {
       <p className="text-lg font-black num">إجمالي الفاتورة {ar(inv.total)} ج · {ar(inv.points)} نقطة</p>
       <div className="bg-white p-5 inline-block mt-4 border border-sand"><QRCodeSVG value={`${location.origin}/checkin?t=${inv.token}`} size={240} /></div>
       {!st?.claimed_at && <p className="mt-3 text-2xl font-black num" dir="ltr">{String(Math.floor(left / 60)).padStart(2, "0")}:{String(left % 60).padStart(2, "0")}</p>}
-      {st?.claimed_at ? <p role="status" className="mt-4 leading-8 font-bold">تم: {st.claimer?.display_name ?? "عميل"} {st.discount > 0 ? `استخدم ${ar(st.discount)} نقطة. ` : ""}المطلوب دفعه <span className="text-2xl num">{ar(st.total - st.discount)}</span> ج، وجمع {ar(st.points_earned)} نقطة.</p>
+      {st?.claimed_at ? <p role="status" className="mt-4 leading-8 font-bold">تم: {st.claimer?.display_name ?? "عميل"} {st.discount > 0 ? `خصم ${ar(st.discount)} ج من نقاطه. ` : ""}المطلوب دفعه <span className="text-2xl num">{ar(st.total - st.discount)}</span> ج، وجمع {ar(st.points_earned)} نقطة.</p>
         : <p className="mt-4 text-roast">{left === 0 ? "الكود انتهى. اعمل فاتورة جديدة." : "مستني العميل يمسح الكود..."}</p>}
       <button onClick={() => { setInv(null); setSt(null); setQty({}); }} className="mt-6 w-full bg-espresso text-cream font-bold py-4">فاتورة جديدة</button>
     </section>);

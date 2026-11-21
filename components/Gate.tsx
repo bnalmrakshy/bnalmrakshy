@@ -18,7 +18,7 @@ export default function Gate({ need, soft, children }: { need?: "staff" | "admin
   })(); }, [need, soft]);
   const box = "px-6 py-20 max-w-md mx-auto leading-8";
   if (st === "load") return <main className="min-h-[60vh] grid place-items-center text-roast">لحظة...</main>;
-  if (st === "guest") return <div className={box}><p>سجّل دخولك عشان تشوف مكافآتك.</p><Link href="/login?next=/rewards" className="underline font-bold">دخول</Link> · <Link href="/register" className="underline font-bold">حساب جديد</Link></div>;
+  if (st === "guest") return <div className={box}><p>سجّل دخولك عشان تشوف مكافآتك.</p><Link href="/login?next=/menu" className="underline font-bold">دخول</Link> · <Link href="/register" className="underline font-bold">حساب جديد</Link></div>;
   if (st === "err") return <main className={box}><p>مقدرناش نحمّل حسابك.</p>{process.env.NODE_ENV !== "production" && <p className="text-xs text-roast/60" dir="ltr">{em}</p>}<button onClick={logout} className="underline font-bold">سجّل خروج وادخل تاني</button></main>;
   if (st === "deny") return <main className={box}><p>مش مسموح لك تدخل الصفحة دي.</p></main>;
   return <>{children(me!)}</>;

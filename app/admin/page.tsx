@@ -43,7 +43,7 @@ function Admin({ meId, dev }: { meId: string; dev: boolean }) {
   const inp = "border-b border-roast/30 bg-transparent py-2 outline-none focus:border-brass";
   const stats: [string, number | undefined][] = [["الأعضاء", st?.members], ["الزيارات", st?.visits], ["النقاط", st?.points], ["مشروبات مستحقة", st?.drinks], ["الموظفين", st?.staff], ["موقوفين", st?.suspended]];
   return (
-    <main className="px-6 py-10 md:px-16 max-w-4xl">
+    <main className="px-6 py-10 md:px-16 max-w-6xl">
       <h1 className="text-3xl font-black">الإدارة</h1>
       <div className="grid grid-cols-3 gap-4 mt-6">{stats.map(([l, n]) => <div key={l}><div className="text-2xl font-black num">{n == null ? "–" : ar(n)}</div><div className="text-xs text-roast/70">{l}</div></div>)}</div>
       <div className="flex gap-1 mt-8 overflow-x-auto">{T.map(([k, l]) => <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 font-bold border-b-2 whitespace-nowrap ${tab === k ? "border-brass" : "border-transparent text-roast/60"}`}>{l}</button>)}</div>
