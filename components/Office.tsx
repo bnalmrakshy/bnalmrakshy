@@ -11,7 +11,7 @@ export function ItemsPanel() {
   const [q, setQ] = useState(""); const [msg, setMsg] = useState(""); const [edit, setEdit] = useState<Record<number, any>>({}); const [nw, setNw] = useState({ category: "", name: "", price: "", points: "" });
   const val = (i: any, k: string) => edit[i.id]?.[k] ?? i[k]; const set = (i: any, k: string, v: any) => setEdit(e => ({ ...e, [i.id]: { ...e[i.id], [k]: v } }));
   async function save(i: any) {
-    const a = await sb.rpc("admin_save_item", { iid: i.id, newprice: +val(i, "price"), newpoints: +val(i, "points"), newcost: +val(i, "cost"), isactive: val(i, "active") });
+    const a = await sb.rpc("admin_save_item", { iid: i.id, newprice: +val(i, "price"), newpoints: +val(i, "points"), newcost: +val(i, "cost"), isactive: val(i, "active"), newmin: +val(i, "min_stock") });
     if (a.error) return setMsg("تعذّر الحفظ (راجع الأرقام).");
     if (+val(i, "stock") !== i.stock) { const b = await sb.rpc("adjust_stock", { p_item: i.id, p_qty: +val(i, "stock"), p_note: "تسوية يدوية" }); if (b.error) return setMsg("تعذّرت تسوية المخزون."); }
     setMsg("اتحفظ: " + i.name); setEdit(e => { const n = { ...e }; delete n[i.id]; return n; }); reload();
@@ -24,9 +24,9 @@ export function ItemsPanel() {
       <Msg t={msg || err} /><input className="mt-4 w-full" placeholder="دوّر في الأصناف" value={q} onChange={e => setQ(e.target.value)} />
       <ul className="mt-3 space-y-2">{(items as any[]).filter(i => !q || i.name.includes(q) || i.category.includes(q)).map(i => (
         <li key={i.id} className={card + (val(i, "active") ? "" : " opacity-50")}>
-          <div className="flex items-center justify-between"><p className="font-bold">{i.name} <span className="text-xs text-roast font-normal">{i.category}</span></p>{i.stock <= 0 && <span className="text-xs font-bold text-caramel">المخزون خلص</span>}</div>
-          <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-            {[["price", "سعر البيع"], ["cost", "التكلفة"], ["points", "النقاط"], ["stock", "المخزون"]].map(([k, l]) => <label key={k}>{l}<input type="number" className="mt-1 w-full" value={val(i, k)} onChange={e => set(i, k, e.target.value)} /></label>)}
+          <div className="flex items-center justify-between"><p className="font-bold">{i.name} <span className="text-xs text-roast font-normal">{i.category}</span></p>{(i.stock < 0 || (i.min_stock > 0 && i.stock <= i.min_stock)) && <span className="text-xs font-bold text-caramel">المخزون واطي</span>}</div>
+          <div className="mt-2 grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
+            {[["price", "سعر البيع"], ["cost", "التكلفة"], ["points", "النقاط"], ["stock", "المخزون"], ["min_stock", "حد التنبيه"]].map(([k, l]) => <label key={k}>{l}<input type="number" className="mt-1 w-full" value={val(i, k)} onChange={e => set(i, k, e.target.value)} /></label>)}
             <div className="flex items-end gap-3"><label className="flex items-center gap-1 pb-3"><input type="checkbox" checked={val(i, "active")} onChange={e => set(i, "active", e.target.checked)} />ظاهر</label><button onClick={() => save(i)} className={btn + " mb-1"}>حفظ</button></div></div>
         </li>))}</ul>
     </section>);
@@ -133,4 +133,20 @@ export function ReportsPanel() {
           <div className={card}><h3 className="font-black">أصناف خلصت</h3>{d.stock.filter((x: any) => x.stock <= 0).slice(0, 12).map((x: any, k: number) => <p key={k} className="mt-2 text-sm">{x.name} <span className="text-roast num">({M(x.stock)})</span></p>)}{d.stock.every((x: any) => x.stock > 0) && <p className="text-sm text-roast mt-2">مفيش.</p>}</div>
         </div></>}
     </section>);
+}
+
+export function SalesPanel() {
+  const [rows, reload, err] = useData(() => sb.from("invoices").select("id,paid_at,total,discount,paid_amount,payment_method,status,shifts(cashier_name)").in("status", ["paid", "refunded"]).order("paid_at", { ascending: false }).limit(80), []);
+  const [msg, setMsg] = useState(""); const [q, setQ] = useState("");
+  async function refund(r: any) {
+    if (!confirm(`استرجاع الفاتورة بـ ${M(r.paid_amount)} ج؟ هيرجع المخزون والفلوس ونقاط العميل.`)) return;
+    const x = await sb.rpc("refund_invoice", { p_inv: r.id, p_reason: "استرجاع من المكتب" }); setMsg(x.error ? "تعذّر الاسترجاع: " + x.error.message : "اتسترجعت الفاتورة."); reload();
+  }
+  const list = (rows as any[]).filter(r => !q || String(r.id).startsWith(q) || (r.shifts?.cashier_name ?? "").includes(q));
+  return (
+    <section><input className="w-full" placeholder="دوّر برقم الفاتورة أو اسم الكاشير" value={q} onChange={e => setQ(e.target.value)} /><Msg t={msg || err} />
+      <ul className="mt-3 space-y-2">{list.length === 0 ? <p className="text-roast">مفيش فواتير.</p> : list.map(r => (
+        <li key={r.id} className={card + " flex flex-wrap items-center justify-between gap-2 " + (r.status === "refunded" ? "opacity-50" : "")}>
+          <span className="text-sm"><b className="num">{String(r.id).slice(0, 8)}</b> · {r.shifts?.cashier_name ?? "—"} · {METHOD[r.payment_method] ?? r.payment_method}<span className="block text-xs text-roast num">{r.paid_at ? T(r.paid_at) : ""}</span></span>
+          <span className="flex items-center gap-3"><b className="num">{M(r.paid_amount)} ج</b>{r.status === "refunded" ? <span className="text-xs font-bold text-caramel">مسترجعة</span> : <button onClick={() => refund(r)} className="text-sm underline text-caramel font-bold">استرجاع</button>}</span></li>))}</ul></section>);
 }

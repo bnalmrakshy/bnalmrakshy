@@ -25,6 +25,20 @@ function Kpi({ l, v, p, cmp, money = true, i }: any) {
 }
 const Box = ({ t, children, h = 256 }: { t: string; children: React.ReactNode; h?: number }) => <div className={card}><h3 className="font-black mb-3">{t}</h3><div dir="ltr" style={{ height: h }}>{children}</div></div>;
 const Empty = () => <p className="text-sm text-roast grid place-items-center h-full" dir="rtl">لا بيانات في الفترة دي.</p>;
+
+function Alerts() {
+  const [a, reload] = useData(() => sb.rpc("admin_alerts"), null);
+  if (!a) return null;
+  async function closeIt(id: number) { const v = prompt("عدّ الكاش اللي في الدُرج واكتب المبلغ:"); if (v === null) return; const r = await sb.rpc("admin_close_shift", { p_id: id, counted: +v || 0, nt: "قفل من الأدمن" }); if (r.error) alert("تعذّر القفل: " + r.error.message); reload(); }
+  const rows: [string, React.ReactNode][] = [];
+  if (a.low_stock.length) rows.push(["مخزون واطي", a.low_stock.map((x: any) => `${x.name} (${M(x.stock)})`).join("، ")]);
+  a.open_shifts.forEach((x: any) => rows.push(["شيفت مفتوح", <span key={x.id}>{x.cashier_name} #{x.id} من {new Date(x.opened_at).toLocaleString("ar-EG", { timeZone: "Africa/Cairo", dateStyle: "short", timeStyle: "short" })} <button onClick={() => closeIt(x.id)} className="underline font-bold mr-2">قفل</button></span>]));
+  a.cash_diffs.forEach((x: any) => rows.push(["فرق في الكاش", `${x.cashier_name} #${x.id}: ${M(x.diff)} ج`]));
+  if (a.debtors.length) rows.push(["مديونيات العملاء", a.debtors.map((x: any) => `${x.name} (${M(x.balance)} ج)`).join("، ")]);
+  if (a.stale > 0) rows.push(["فواتير قديمة مفتوحة", `${M(a.stale)} فاتورة`]);
+  if (!rows.length) return <div className="rounded-2xl border border-sand p-3 text-sm text-roast">مفيش تنبيهات. كله تمام.</div>;
+  return <div className="rounded-2xl border border-caramel p-4"><h3 className="font-black mb-2">تنبيهات ({M(rows.length)})</h3><ul className="space-y-1.5 text-sm">{rows.map(([t, v], i) => <li key={i}><b>{t}:</b> {v}</li>)}</ul></div>;
+}
 export default function Dashboard() {
   const today = cairoToday(); const [from, setFrom] = useState(addDays(today, -6)); const [to, setTo] = useState(today); const [shift, setShift] = useState(""); const [cmp, setCmp] = useState(true);
   const [metric, setMetric] = useState("sales"); const [imet, setImet] = useState("revenue"); const [sel, setSel] = useState<number | null>(null); const [d, setD] = useState<any>(null); const [msg, setMsg] = useState("");
@@ -49,6 +63,7 @@ export default function Dashboard() {
   const none = k.count === 0; const tick = (v: any) => (single ? v : String(v).slice(5)); const lab = MET.find(m => m[0] === metric)![1];
   return (
     <section className="space-y-5">
+      <Alerts />
       <div className="flex flex-wrap items-end gap-2 text-sm">
         {[["النهارده", today, today], ["امبارح", addDays(today, -1), addDays(today, -1)], ["٧ أيام", addDays(today, -6), today], ["٣٠ يوم", addDays(today, -29), today], ["الشهر ده", today.slice(0, 8) + "01", today]].map(([l, a, b]) => <button key={l} onClick={() => preset(a, b)} className={`px-3 py-2 rounded-full font-bold ${from === a && to === b ? "bg-espresso text-cream" : "bg-sand"}`}>{l}</button>)}
         <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="!w-auto" /><input type="date" value={to} onChange={e => setTo(e.target.value)} className="!w-auto" />
