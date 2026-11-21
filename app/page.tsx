@@ -36,7 +36,7 @@ export default function Home() {
     <main className="mx-auto max-w-lg lg:max-w-6xl px-5 lg:px-8 pt-5 space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {ready && (me ? <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <p className="text-sm text-roast mb-2">{greet()}، {me.display_name}</p>
-        {staff ? <Link href="/club" className="block rounded-3xl bg-espresso text-cream p-6 active:scale-[.98] transition"><p className="text-xl font-black">لوحة الإدارة</p><p className="text-cream/60 text-sm mt-1">فاتورة جديدة · الأعضاء · المنيو</p></Link>
+        {staff ? <Link href="/club" className="block rounded-3xl bg-espresso text-cream p-6 active:scale-[.98] transition"><p className="text-xl font-black">لوحة الإدارة</p><p className="text-cream/60 text-sm mt-1">الكاشير · المكتب · الأعضاء</p></Link>
           : <div className="rounded-3xl bg-espresso text-cream p-6 relative overflow-hidden">
             <div className="absolute -left-6 -bottom-6 opacity-10"><Logo size={150} /></div>
             <p className="text-cream/60 text-sm">رصيدك</p>

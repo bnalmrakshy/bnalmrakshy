@@ -12,7 +12,9 @@ export default function Hub({ me }: { me: Me }) {
     <main className="px-6 py-12 md:px-16 max-w-xl">
       <div className="flex items-center gap-4"><Avatar url={me.avatar_url} size={72} /><div><h1 className="text-3xl font-black">{me.display_name}</h1><p className="text-sm text-roast">{me.role === "staff" ? "كاشير" : me.role === "developer" ? "مطوّر" : "إدارة"}</p></div></div>
       <div className="mt-8 space-y-3">
-        {admin && <Link href="/admin" className={btn + " bg-espresso text-cream"}>لوحة الإدارة (فاتورة جديدة والأعضاء والمنيو)</Link>}
+        <Link href="/pos" className={btn + " bg-espresso text-cream"}>الكاشير (فاتورة جديدة)</Link>
+        {admin && <Link href="/office" className={btn + " border border-espresso"}>المكتب: جرد ومخزون ومشتريات وخزن</Link>}
+        {admin && <Link href="/admin" className={btn + " border border-espresso"}>الأعضاء والتطبيق</Link>}
         <Link href="/profile" className={btn + " border border-espresso"}>تعديل حسابي</Link></div>
       {admin && <section className="mt-10"><h2 className="text-xl font-black">أكتر العملاء تفاعلًا (آخر ٣٠ يوم)</h2>
         {err ? <p className="mt-3">تعذّر تحميل القايمة.</p> : top === null ? <p className="mt-3 text-roast/60">بنحمّل...</p> : top.length === 0 ? <p className="mt-3">لسه مفيش عملاء.</p> :

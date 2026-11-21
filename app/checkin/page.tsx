@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Counter from "@/components/Counter";
 import StreakCups from "@/components/StreakCups";
 import { sb, ar } from "@/lib/supabase";
-type P = { total: number; points: number; balance: number; lines: { name: string; qty: number; price: number }[] };
+type P = { status?: string; total: number; points: number; balance: number; lines: { name: string; qty: number; price: number }[] };
 type R = { total: number; discount: number; paid: number; earned: number; streak: number; target: number; drink: boolean };
 const MSG: Record<string, string> = {
   "invalid invoice": "الفاتورة دي مش صالحة أو انتهت. اطلب من الكاشير فاتورة جديدة.",
@@ -35,7 +35,7 @@ export default function CheckIn() {
         <ul className="mt-6">{p.lines.map((l, i) => <li key={i} className="py-3 border-b border-sand flex justify-between"><span>{l.name} × {ar(l.qty)}</span><span className="num">{ar(l.price * l.qty)} ج</span></li>)}</ul>
         <p className="mt-4 text-2xl font-black num">الإجمالي {ar(p.total)} ج</p>
         <button disabled={busy} onClick={() => claim(false)} className="mt-8 w-full bg-espresso text-cream font-bold py-4 disabled:opacity-50 active:scale-[.98]">سجّل الفاتورة وخد {ar(p.points)} نقطة</button>
-        {disc > 0 && <button disabled={busy} onClick={() => claim(true)} className="mt-3 w-full border border-espresso font-bold py-4 disabled:opacity-50 active:scale-[.98]">استخدم {ar(disc * 10)} نقطة واخصم {ar(disc)} جنيه (رصيدك {ar(p.balance)} نقطة) وخد {ar(ifUse)} نقطة</button>}
+        {disc > 0 && p.status !== "paid" && <button disabled={busy} onClick={() => claim(true)} className="mt-3 w-full border border-espresso font-bold py-4 disabled:opacity-50 active:scale-[.98]">استخدم {ar(disc * 10)} نقطة واخصم {ar(disc)} جنيه (رصيدك {ar(p.balance)} نقطة) وخد {ar(ifUse)} نقطة</button>}
         <p className="mt-4 text-xs text-roast/70 leading-6">١٠ نقط = ١ جنيه. لو استخدمت نقاطك بتجمع نقاط على المبلغ اللي هتدفعه بس.</p>
       </main>);
   }
