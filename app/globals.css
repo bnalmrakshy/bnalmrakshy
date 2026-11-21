@@ -14,3 +14,7 @@ a, button { -webkit-touch-callout:none; }
 .no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
 input[data-pw]{ background:#F3EEEA !important; border:0 !important; border-radius:12px !important; padding:.8rem 1rem .8rem 3rem !important; }
 @media (min-width:1024px){ body{padding-bottom:0} }
+
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee{animation:marquee 45s linear infinite}.marquee:hover{animation-play-state:paused}
+@media (prefers-reduced-motion: reduce){.marquee{animation:none}}

@@ -16,6 +16,11 @@ const P: Record<string, string> = {
   people: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3.5 3-5 7-5s7 1.5 7 5M17 11a2.5 2.5 0 1 0 0-5M18 15c2.5.3 4 1.6 4 4",
   wallet: "M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l2-3h12M16 14h3",
   doc: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6",
+  coin: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4",
+  heart: "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z",
+  flame: "M12 3c.5 3 4 4.5 4 9a4 4 0 0 1-8 0c0-2 1-3.2 2-4.2.1 1.6 1 2 2 1.4-.8-2-1-4 0-6.2z",
+  arrowup: "M12 19V5M6 11l6-6 6 6",
+  arrowdown: "M12 5v14M6 13l6 6 6-6",
   fb: "M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21z",
 };
 export default function Icon({ name, size = 24 }: { name: keyof typeof P; size?: number }) {

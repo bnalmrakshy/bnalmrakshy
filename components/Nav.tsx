@@ -22,7 +22,7 @@ export default function Nav() {
           <Link href="/" className="flex items-center gap-2 font-black text-lg"><Logo size={30} />المراكشي</Link>
           <nav className="hidden lg:flex items-center gap-1">{tabs.map(([h, l]) => <Link key={h} href={h} className={`px-4 py-2 rounded-xl text-sm font-bold transition ${p === h ? "bg-sand text-espresso" : "text-roast hover:bg-sand/60"}`}>{l}</Link>)}</nav>
           <div className="flex items-center gap-3">
-            {SOCIAL.facebook && <a href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer" aria-label="فيسبوك" className="w-9 h-9 rounded-full bg-sand text-espresso grid place-items-center active:scale-90 transition"><Icon name="fb" size={18} /></a>}
+            
             <Link href={auth ? "/club" : "/login"} aria-label="حسابي" className="active:scale-90 transition"><Avatar url={av} size={36} /></Link>
           </div>
         </div>

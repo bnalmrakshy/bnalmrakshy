@@ -45,7 +45,7 @@ export default function CheckIn() {
         <motion.path d="M14 27l8 8 16-17" fill="none" stroke="#B07B52" strokeWidth="3" initial={{ pathLength: 0 } as any} animate={{ pathLength: 1 } as any} transition={{ duration: .6, delay: .2 }} /></svg></div>
       <h1 className="text-4xl font-black mt-8">اتسجّلت فاتورتك</h1>
       <p className="mt-4 text-cream/80 num">المطلوب دفعه {ar(r!.paid)} ج{r!.discount > 0 ? ` (بعد خصم ${ar(r!.discount)} ج من نقاطك)` : ""}</p>
-      <p className="text-brass text-2xl font-black mt-3 num">+<Counter to={r!.earned} /> نقطة</p>
+      <p className="text-brass text-2xl font-black mt-3 num">كسبت <Counter to={r!.earned} /> نقطة</p>
       <div className="mt-10 flex justify-center"><StreakCups count={Math.min(r!.streak, r!.target)} target={r!.target} /></div>
       <p className="mt-6 leading-8 text-cream/80">{`ستريك ${ar(r!.streak)} يوم ورا بعض.`}</p>
     </main>);

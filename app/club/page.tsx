@@ -51,7 +51,7 @@ function Club({ me }: { me: Me }) {
         <div className="mt-8 flex flex-col gap-3">
           <Link href="/scan" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">امسح كود الفاتورة</Link>
           <Link href="/profile" className="border border-espresso text-center py-3 font-bold">تعديل حسابي</Link>
-          <Link href="/history" className="border border-espresso text-center py-3 font-bold">سجل المشتريات</Link>
+          <Link href="/history" className="border border-espresso text-center py-3 font-bold">محفظتي</Link>
           
           {me.role === "admin" && <Link href="/admin" className="border border-espresso text-center py-3 font-bold">الإدارة وتوليد كود التسجيل</Link>}
         </div>
