@@ -5,12 +5,14 @@ import Avatar from "@/components/Avatar";
 import type { Me } from "@/components/Gate";
 import { sb, logout, ar } from "@/lib/supabase";
 export default function Hub({ me }: { me: Me }) {
-  const admin = me.role === "admin" || me.role === "developer"; const [top, setTop] = useState<any[] | null>(null); const [err, setErr] = useState(false);
+  const admin = me.role === "admin" || me.role === "developer"; const [top, setTop] = useState<any[] | null>(null); const [err, setErr] = useState(false); const [td, setTd] = useState<any>(null);
   useEffect(() => { if (admin) sb.rpc("admin_top_customers", { lim: 10 }).then(r => r.error ? setErr(true) : setTop(r.data)); }, [admin]);
+  useEffect(() => { if (!admin) return; const t = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }); sb.rpc("dashboard_data", { d_from: t, d_to: t, p_shift: null }).then(r => { if (!r.error) setTd(r.data.kpi); }); }, [admin]);
   const btn = "block text-center py-4 font-bold active:scale-[.98]";
   return (
     <main className="px-6 py-12 md:px-16 max-w-xl">
       <div className="flex items-center gap-4"><Avatar url={me.avatar_url} size={72} /><div><h1 className="text-3xl font-black">{me.display_name}</h1><p className="text-sm text-roast">{me.role === "staff" ? "كاشير" : me.role === "developer" ? "مطوّر" : "إدارة"}</p></div></div>
+      {admin && td && <Link href="/office" className="mt-6 grid grid-cols-3 gap-3 active:scale-[.98] transition">{[["مبيعات النهارده", td.sales + " ج"], ["فواتير", td.count], ["أرباح تقديرية", td.profit + " ج"]].map(([l, v]) => <div key={l as string} className="rounded-2xl bg-espresso text-cream p-3 text-center"><p className="text-[11px] text-cream/60">{l}</p><p className="font-black num">{Number(String(v).replace(" ج", "")).toLocaleString("ar-EG")}{String(v).endsWith("ج") ? " ج" : ""}</p></div>)}</Link>}
       <div className="mt-8 space-y-3">
         <Link href="/pos" className={btn + " bg-espresso text-cream"}>الكاشير (فاتورة جديدة)</Link>
         {admin && <Link href="/office" className={btn + " border border-espresso"}>المكتب: جرد ومخزون ومشتريات وخزن</Link>}
