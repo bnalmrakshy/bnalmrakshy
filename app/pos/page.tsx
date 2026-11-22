@@ -15,7 +15,7 @@ function Pos({ me }: { me: Me }) {
   const [q, setQ] = useState(""); const [cat, setCat] = useState(""); const [inv, setInv] = useState<Inv | null>(null); const [st, setSt] = useState<any>(null); const [left, setLeft] = useState(0);
   const [mins, setMins] = useState(2); const [method, setMethod] = useState("cash"); const [custs, setCusts] = useState<any[]>([]); const [cust, setCust] = useState(""); const [nc, setNc] = useState({ name: "", phone: "" });
   const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [openCash, setOpenCash] = useState(""); const [closing, setClosing] = useState(false); const [counted, setCounted] = useState("");
-  const [online, setOnline] = useState(true); const [stats, setStats] = useState({ n: 0, sum: 0 }); const [summary, setSummary] = useState<any>(null);
+  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]); const [branch, setBranch] = useState(""); const [online, setOnline] = useState(true); const [stats, setStats] = useState({ n: 0, sum: 0 }); const [summary, setSummary] = useState<any>(null);
   useEffect(() => { const f = () => setOnline(navigator.onLine); f(); window.addEventListener("online", f); window.addEventListener("offline", f); return () => { window.removeEventListener("online", f); window.removeEventListener("offline", f); }; }, []);
   const loadStats = useCallback(async (sid: number) => { const r = await sb.from("invoices").select("paid_amount").eq("shift_id", sid).eq("status", "paid"); const rows = r.data ?? []; setStats({ n: rows.length, sum: rows.reduce((a: number, x: any) => a + x.paid_amount, 0) }); }, []);
   const loadShift = useCallback(async () => {
@@ -29,14 +29,14 @@ function Pos({ me }: { me: Me }) {
     }
   }, [me.id, loadStats]);
   const loadCusts = useCallback(async () => { const r = await sb.from("customers").select("id,name,phone").order("name"); if (r.error) setMsg("تعذّر تحميل العملاء: " + r.error.message); setCusts(r.data ?? []); }, []);
-  useEffect(() => { loadShift(); loadCusts(); sb.rpc("pos_items").then(r => { if (r.error) setMsg("تعذّر تحميل الأصناف: " + r.error.message); else setItems(r.data ?? []); }); }, [loadShift, loadCusts]);
+  useEffect(() => { loadShift(); loadCusts(); sb.from("branches").select("id,name").eq("active", true).order("id").then(r => { setBranches(r.data ?? []); if (r.data?.length === 1) setBranch(String(r.data[0].id)); }); sb.rpc("pos_items").then(r => { if (r.error) setMsg("تعذّر تحميل الأصناف: " + r.error.message); else setItems(r.data ?? []); }); }, [loadShift, loadCusts]);
   useEffect(() => { if (!inv) return; const t = setInterval(async () => { const r = await sb.from("invoices").select("claimed_at,discount,total,points_earned,status,claimer:claimed_by(display_name)").eq("id", inv.id).single(); if (r.data) setSt(r.data); }, 2500); return () => clearInterval(t); }, [inv]);
   useEffect(() => { if (!inv) return; const t = setInterval(() => setLeft(Math.max(0, Math.round((+new Date(inv.expires_at) - Date.now()) / 1000))), 500); return () => clearInterval(t); }, [inv]);
   const lines = items.filter(i => (cart[i.id] ?? 0) > 0); const total = lines.reduce((a, i) => a + i.price * cart[i.id], 0); const pts = lines.reduce((a, i) => a + i.points * cart[i.id], 0);
   const cats = Array.from(new Set(items.map(i => i.category))); const shown = items.filter(i => (!cat || i.category === cat) && (!q || i.name.includes(q)));
   const bump = (id: number, d: number) => setCart(c => ({ ...c, [id]: Math.max(0, Math.min(100, (c[id] ?? 0) + d)) }));
   const due = inv ? inv.total - (st?.discount ?? 0) : 0; const off = !online || busy;
-  async function openShift(e: React.FormEvent) { e.preventDefault(); setBusy(true); const r = await sb.rpc("open_shift", { opening: +openCash || 0 }); setBusy(false); if (r.error) return setMsg(why(r.error.message)); setMsg(""); setSummary(null); await loadShift(); }
+  async function openShift(e: React.FormEvent) { e.preventDefault(); if (branches.length > 1 && !branch) return setMsg("اختار الفرع."); setBusy(true); const r = await sb.rpc("open_shift", { opening: +openCash || 0, p_branch: branch ? +branch : null }); setBusy(false); if (r.error) return setMsg(why(r.error.message)); setMsg(""); setSummary(null); await loadShift(); }
   async function closeShift(e: React.FormEvent) { e.preventDefault(); setBusy(true); const r = await sb.rpc("close_shift", { counted: +counted || 0 }); setBusy(false); if (r.error) return setMsg(why(r.error.message)); setClosing(false); setShift(null); setInv(null); setCart({}); setSummary(r.data); setMsg(""); }
   async function create() {
     setBusy(true); setMsg(""); const r = await sb.rpc("create_invoice", { lines: lines.map(i => ({ id: i.id, qty: cart[i.id] })), mins }); setBusy(false);
@@ -58,6 +58,7 @@ function Pos({ me }: { me: Me }) {
         <p className="mt-3 pt-3 border-t border-white/20 flex justify-between text-sm"><span>الفرق في الكاش</span><b className="num">{M(summary.diff)} ج</b></p></div>}
       <p className="text-roast mt-4">افتح الشيفت بتاعك عشان تبدأ تبيع.</p>
       <form onSubmit={openShift} className="mt-4 rounded-3xl bg-sand/60 p-5 space-y-4"><label className="block text-sm font-bold">الكاش اللي في الدُرج دلوقتي (ج)<input type="number" min={0} className="mt-1.5 w-full" value={openCash} onChange={e => setOpenCash(e.target.value)} /></label>
+        {branches.length > 1 && <label className="block text-sm font-bold">الفرع<select className="mt-1.5 w-full" value={branch} onChange={e => setBranch(e.target.value)}><option value="">اختار الفرع</option>{branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>}
         <button disabled={off} className={btn + " w-full py-3.5"}>{busy ? "لحظة..." : "افتح الشيفت"}</button></form>
       {msg && <p role="status" className="mt-4 text-caramel font-bold break-words">{msg}</p>}</main>);
   return (

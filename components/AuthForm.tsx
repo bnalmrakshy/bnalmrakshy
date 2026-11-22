@@ -29,17 +29,17 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     <main className="min-h-[80vh] px-6 py-14 max-w-md mx-auto">
       <Logo size={56} />
       <h1 className="text-4xl font-black mt-2">{reg ? "ابدأ الستريك" : "أهلًا بيك تاني"}</h1>
-      {reg && <div className="mt-6 border border-sand p-4 text-sm leading-7 text-roast"><b>اليوزر مش إيميلك.</b> اختار اسم قصير بالإنجليزي من غير مسافات، زي ahmed12، وهتدخل بيه كل مرة. مفيش حاجة اسمها إيميل هنا. والباسورد لازم يجمع حروف إنجليزي وأرقام (٨ على الأقل).</div>}
+      
       <form onSubmit={submit} className="mt-10 space-y-7">
-        {reg && <input className={inp} placeholder="اسمك اللي هيظهر للناس، مثال: محمد" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={24} />}
-        <input className={inp} dir="ltr" style={{ textAlign: "right" }} placeholder={reg ? "اليوزر (مش إيميل) مثال: ahmed12" : "اليوزر"} autoCapitalize="none" autoComplete="username" value={f.user} onChange={e => setF({ ...f, user: e.target.value })} />
-        <PasswordInput className={inp} placeholder={reg ? "الباسورد: حروف إنجليزي + أرقام" : "الباسورد"} autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
-        {reg && <ul className="text-xs space-y-1 -mt-3">{([["٨ حروف على الأقل", f.pass.length >= 8], ["حروف إنجليزي", /[A-Za-z]/.test(f.pass)], ["أرقام", /\d/.test(f.pass)]] as [string, boolean][]).map(([t, ok]) => <li key={t} className={ok ? "text-espresso font-bold" : "text-roast/50"}>{ok ? "✓" : "○"} {t}</li>)}</ul>}
+        {reg && <input className={inp} placeholder="اسمك" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} maxLength={24} />}
+        <input className={inp} dir="ltr" style={{ textAlign: "right" }} placeholder="اليوزر (إنجليزي)" autoCapitalize="none" autoComplete="username" value={f.user} onChange={e => setF({ ...f, user: e.target.value })} />
+        <PasswordInput className={inp} placeholder="الباسورد" autoComplete={reg ? "new-password" : "current-password"} value={f.pass} onChange={e => setF({ ...f, pass: e.target.value })} />
+        {reg && <p className="text-xs text-roast -mt-3">٨ حروف على الأقل، حروف وأرقام.</p>}
         {err && <p role="alert" className="text-caramel font-semibold">{err}</p>}
         <button disabled={busy} className="w-full bg-espresso text-cream font-bold py-4 active:scale-[.98] transition disabled:opacity-50">{busy ? "لحظة..." : reg ? "إنشاء الحساب" : "دخول"}</button>
       </form>
       <a href={reg ? "/login" : "/register"} className="block mt-6 text-sm text-roast underline">{reg ? "عندي حساب" : "معييش حساب"}</a>
-      <p className="mt-8 text-xs text-roast/60 leading-6">نسيت الباسورد؟ اطلب من الكاشير يعيّن لك واحد جديد.</p>
+      {!reg && <p className="mt-8 text-xs text-roast/60">نسيت الباسورد؟ اطلب من الإدارة.</p>}
     </main>
   );
 }

@@ -21,3 +21,11 @@ export async function exportReport(d: any, from: string, to: string, shiftLabel:
   add("الشيفتات", d.shifts.map((x: any) => ({ "رقم": x.id, "الكاشير": x.cashier_name, "فتح": tm(x.opened_at), "قفل": tm(x.closed_at), "افتتاحي": x.opening_cash, "المتوقع": x.expected_cash, "المعدود": x.counted_cash, "الفرق": x.diff })));
   X.writeFile(wb, `جرد_${from}_الى_${to}.xlsx`);
 }
+
+// تصدير بيانات التحليل (بأسماء مستعارة) كملف Excel بشيت لكل جدول + JSON
+export async function exportAnalytics(d: any) {
+  const X = await import("xlsx"); const wb = X.utils.book_new();
+  for (const k of ["dim_branches", "dim_items", "dim_members", "fact_sales", "fact_sale_items", "fact_points"]) X.utils.book_append_sheet(wb, X.utils.json_to_sheet(d[k]?.length ? d[k] : [{ note: "no data" }]), k.slice(0, 31));
+  const day = new Date().toISOString().slice(0, 10); X.writeFile(wb, `almarrakshi_analytics_${day}.xlsx`);
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type: "application/json" })); a.download = `almarrakshi_analytics_${day}.json`; a.click(); URL.revokeObjectURL(a.href);
+}

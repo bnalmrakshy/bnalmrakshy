@@ -27,7 +27,7 @@ export default function Nav() {
           </div>
         </div>
       </header>
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-sand rounded-t-3xl shadow-[0_-6px_24px_rgba(0,0,0,.07)] pb-[env(safe-area-inset-bottom)]">
+      {!["/pos", "/office", "/admin"].some(x => p.startsWith(x)) && <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-sand rounded-t-3xl shadow-[0_-6px_24px_rgba(0,0,0,.07)] pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto max-w-lg grid grid-cols-5 items-end px-2">
           {tabs.map(([h, l, ic]) => h === "/scan" ? (
             <Link key={h} href={h} aria-label="مسح فاتورة" className="flex flex-col items-center pb-2 text-[11px] font-bold">
@@ -36,6 +36,6 @@ export default function Nav() {
             <Link key={h} href={h} onClick={() => navigator.vibrate?.(8)} className={`relative flex flex-col items-center gap-1 py-3 text-[11px] font-bold active:scale-95 transition ${p === h ? "text-espresso" : "text-roast/50"}`}>
               <Icon name={ic} size={23} />{l}{p === h && <motion.span layoutId="tab" transition={{ type: "spring", stiffness: 500, damping: 35 }} className="absolute top-1.5 inset-x-3 h-[52px] rounded-2xl bg-sand -z-10" />}</Link>))}
         </div>
-      </nav>
+      </nav>}
     </>);
 }

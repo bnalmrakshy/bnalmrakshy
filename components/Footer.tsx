@@ -11,6 +11,6 @@ export default function Footer() {
         <svg viewBox="0 0 24 24" width="46" height="46" fill="#FFFFFF" aria-hidden><path d={FB} /></svg>
         <span className="flex-1"><span className="block font-black text-lg">تابعنا على فيسبوك</span><span className="block text-sm text-cream/60">أخبار وعروض المراكشي أول بأول</span></span>
         <span className="text-xl" aria-hidden>←</span></a>
-      <p className="mt-4 text-center text-xs text-roast/60">المراكشي · قهوة بتكسّبك</p>
+      <p className="mt-4 text-center text-xs text-roast/60">المراكشي · <a href="/privacy" className="underline">الخصوصية</a></p>
     </footer>);
 }

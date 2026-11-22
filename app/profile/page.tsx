@@ -4,6 +4,7 @@ import Gate, { Me } from "@/components/Gate";
 import Avatar from "@/components/Avatar";
 import Icon from "@/components/Icons";
 import PasswordInput from "@/components/PasswordInput";
+import LocationCard from "@/components/LocationCard";
 import { sb, logout } from "@/lib/supabase";
 const MSG: Record<string, string> = { "too soon": "تقدر تغيّر اليوزر مرة كل ٧ أيام.", taken: "اليوزر ده مستخدم.", "bad username": "اليوزر حروف إنجليزي وأرقام و _ فقط (٣ لـ ٢٠).", "bad name": "الاسم من ٢ لـ ٢٤ حرف." };
 function P({ me }: { me: Me }) {
@@ -63,6 +64,7 @@ function P({ me }: { me: Me }) {
         {pmsg && <p role="status" className="text-caramel font-semibold text-sm">{pmsg}</p>}
         <p className="text-xs text-roast/70 leading-6">نسيت باسوردك؟ اطلب من الإدارة تعيّن لك واحد جديد.</p>
       </form>
+      <LocationCard id={me.id} />
       <button onClick={logout} className="mt-5 w-full py-3.5 font-bold text-roast">تسجيل خروج</button>
     </main>);
 }
