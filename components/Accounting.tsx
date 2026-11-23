@@ -3,11 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import { btn, card, useData } from "@/components/ui";
 import { sb, cairoToday } from "@/lib/supabase";
 import { M, addDays } from "@/lib/erp";
+import { useAdmin } from "@/components/admin/ctx";
 type R = { code: string; name: string; type: string; p_debit: number; p_credit: number; c_debit: number; c_credit: number };
 const TABS = [["pnl", "قائمة الدخل"], ["bs", "المركز المالي"], ["tb", "ميزان المراجعة"], ["exp", "المصروفات"], ["open", "أرصدة افتتاحية"]];
 const Row = ({ l, v, b, i }: { l: string; v: number; b?: boolean; i?: boolean }) => <tr className={b ? "font-black border-t border-espresso" : ""}><td className={`py-2 ${i ? "pr-6" : ""}`}>{l}</td><td className="py-2 text-left num">{M(v)}</td></tr>;
 export default function Accounting() {
-  const today = cairoToday(); const [tab, setTab] = useState("pnl"); const [from, setFrom] = useState(today.slice(0, 8) + "01"); const [to, setTo] = useState(today); const [branch, setBranch] = useState(""); const [rows, setRows] = useState<R[] | null>(null); const [msg, setMsg] = useState("");
+  const today = cairoToday(); const [tab, setTab] = useState("pnl"); const [from, setFrom] = useState(today.slice(0, 8) + "01"); const [to, setTo] = useState(today); const { branch } = useAdmin(); const [rows, setRows] = useState<R[] | null>(null); const [msg, setMsg] = useState("");
   const [branches] = useData(() => sb.from("branches").select("id,name").order("id"), []); const [cats] = useData(() => sb.from("gl_accounts").select("code,name,type").order("code"), []); const [pay] = useData(() => sb.from("accounts").select("id,name").order("id"), []);
   const [exps, reloadExps] = useData(() => sb.rpc("list_expenses", { d_from: addDays(cairoToday(), -60), d_to: cairoToday() }), []);
   const [f, setF] = useState({ date: today, code: "6100", acct: "", amount: "", note: "" }); const [ob, setOb] = useState({ code: "1100", amount: "" });
@@ -25,7 +26,7 @@ export default function Accounting() {
     <section>
       <div className="flex flex-wrap gap-1 border-b border-sand">{TABS.map(([k, l]) => <button key={k} onClick={() => setTab(k)} className={`px-4 py-2.5 text-sm font-bold -mb-px border-b-2 ${tab === k ? "border-espresso" : "border-transparent text-roast"}`}>{l}</button>)}</div>
       <div className="mt-3 flex flex-wrap items-end gap-2 text-sm"><label className="text-xs">من<input type="date" className="block" value={from} onChange={e => setFrom(e.target.value)} /></label><label className="text-xs">إلى<input type="date" className="block" value={to} onChange={e => setTo(e.target.value)} /></label>
-        <label className="text-xs">الفرع<select className="block" value={branch} onChange={e => setBranch(e.target.value)}><option value="">كل الفروع</option>{(branches as any[]).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label></div>
+        </div>
       {msg && <p role="status" className="mt-3 text-caramel font-bold text-sm">{msg}</p>}
       {!rows ? <p className="mt-4 text-roast">بنحمّل...</p> : <div className="mt-4">
         {tab === "pnl" && <div className={card + " max-w-xl"}><h3 className="font-black mb-2">قائمة الدخل</h3><table className="w-full text-sm"><tbody>

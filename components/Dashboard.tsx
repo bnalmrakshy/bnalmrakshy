@@ -6,6 +6,7 @@ import Counter from "@/components/Counter";
 import Sk from "@/components/Skeleton";
 import { card, useData } from "@/components/ui";
 import { sb, cairoToday } from "@/lib/supabase";
+import { useAdmin } from "@/components/admin/ctx";
 import { METHOD, M, addDays } from "@/lib/erp";
 const C = ["#141414", "#B07B52", "#4A2F20", "#9C6B45", "#CDB9A6"];
 const TIP = { contentStyle: { borderRadius: 14, border: 0, boxShadow: "0 8px 24px rgba(0,0,0,.14)", direction: "rtl" as const }, labelStyle: { fontWeight: 800 } };
@@ -37,10 +38,11 @@ function Alerts() {
   return <div className="rounded-2xl border border-caramel p-4"><h3 className="font-black mb-2">تنبيهات ({M(rows.length)})</h3><ul className="space-y-1.5 text-sm">{rows.map(([t, v], i) => <li key={i}><b>{t}:</b> {v}</li>)}</ul></div>;
 }
 export default function Dashboard() {
+  const { branch } = useAdmin();
   const today = cairoToday(); const [from, setFrom] = useState(addDays(today, -6)); const [to, setTo] = useState(today); const [shift, setShift] = useState(""); const [cmp, setCmp] = useState(true);
   const [metric, setMetric] = useState("sales"); const [imet, setImet] = useState("revenue"); const [sel, setSel] = useState<number | null>(null); const [d, setD] = useState<any>(null); const [msg, setMsg] = useState("");
   const [shifts] = useData(() => sb.from("shifts").select("id,cashier_name,opened_at").order("id", { ascending: false }).limit(80), []);
-  const run = useCallback(async () => { setMsg(""); const r = await sb.rpc("dashboard_data", { d_from: from, d_to: to, p_shift: shift ? +shift : null }); if (r.error) return setMsg("تعذّر تحميل اللوحة: " + r.error.message); setD(r.data); setSel(null); }, [from, to, shift]);
+  const run = useCallback(async () => { setMsg(""); const r = await sb.rpc("dashboard_data", { d_from: from, d_to: to, p_shift: shift ? +shift : null, p_branch: branch ? +branch : null }); if (r.error) return setMsg("تعذّر تحميل اللوحة: " + r.error.message); setD(r.data); setSel(null); }, [from, to, shift, branch]);
   useEffect(() => { run(); }, [run]);
   const single = from === to;
   const trend = useMemo(() => {

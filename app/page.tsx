@@ -11,7 +11,7 @@ import { sb, ar } from "@/lib/supabase";
 type Me = { display_name: string; role: string };
 type Row = { rk: number; display_name: string; points: number; is_me: boolean; avatar_url: string | null };
 const greet = () => { const h = +new Intl.DateTimeFormat("en", { hour: "numeric", hour12: false, timeZone: "Africa/Cairo" }).format(new Date()); return h < 12 ? "صباح الخير" : h < 18 ? "نهارك سعيد" : "مساء الخير"; };
-const ACTIONS = [["/menu", "المنيو", "cup"], ["/scan", "امسح فاتورة", "qr"], ["/history", "محفظتي", "wallet"]] as const;
+const ACTIONS = [["/menu", "المنيو", "cup"], ["/scan", "امسح فاتورة", "qr"], ["/history", "محفظتي", "wallet"], ["/order", "اطلب توصيل", "cart"]] as const;
 export default function Home() {
   const [me, setMe] = useState<Me | null>(null); const [pts, setPts] = useState(0); const [ready, setReady] = useState(false); const [top, setTop] = useState<Row[] | null>(null);
   useEffect(() => { (async () => {
@@ -48,7 +48,7 @@ export default function Home() {
             <ol className="mt-4 space-y-2">{top.map(r => <li key={r.rk} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 ${r.rk === 1 ? "bg-espresso text-cream" : "bg-white"}`}><span className="w-5 text-center font-black num text-sm">{ar(r.rk)}</span><Avatar url={r.avatar_url} size={32} /><span className="flex-1 font-bold text-sm truncate">{r.display_name}</span></li>)}</ol>}
         </section>
       </div>
-      <div className="grid grid-cols-3 gap-3">{ACTIONS.map(([h, l, ic]) => (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{ACTIONS.map(([h, l, ic]) => (
         <Link key={h} href={h} className="rounded-3xl bg-sand/70 py-5 flex flex-col items-center gap-2 font-bold text-sm active:scale-95 transition"><span className="w-12 h-12 rounded-2xl bg-espresso text-cream grid place-items-center"><Icon name={ic} size={24} /></span>{l}</Link>))}</div>
     </main>);
 }

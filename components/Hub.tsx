@@ -15,6 +15,7 @@ export default function Hub({ me }: { me: Me }) {
       {admin && td && <Link href="/office" className="mt-6 grid grid-cols-3 gap-3 active:scale-[.98] transition">{[["مبيعات النهارده", td.sales + " ج"], ["فواتير", td.count], ["أرباح تقديرية", td.profit + " ج"]].map(([l, v]) => <div key={l as string} className="rounded-2xl bg-espresso text-cream p-3 text-center"><p className="text-[11px] text-cream/60">{l}</p><p className="font-black num">{Number(String(v).replace(" ج", "")).toLocaleString("ar-EG")}{String(v).endsWith("ج") ? " ج" : ""}</p></div>)}</Link>}
       <div className="mt-8 space-y-3">
         <Link href="/pos" className={btn + " bg-espresso text-cream"}>الكاشير (فاتورة جديدة)</Link>
+        <Link href="/delivery" className={btn + " border border-espresso"}>طلبات التوصيل</Link>
         {admin && <Link href="/office" className={btn + " border border-espresso"}>المكتب: جرد ومخزون ومشتريات وخزن</Link>}
         {admin && <Link href="/admin" className={btn + " border border-espresso"}>الأعضاء والتطبيق</Link>}
         <Link href="/profile" className={btn + " border border-espresso"}>تعديل حسابي</Link></div>

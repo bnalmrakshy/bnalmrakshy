@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { btn, card, useData } from "@/components/ui";
 import { sb, cairoToday } from "@/lib/supabase";
+import { useAdmin } from "@/components/admin/ctx";
 import { METHOD, M, addDays, exportReport } from "@/lib/erp";
 const Msg = ({ t }: { t: string }) => (t ? <p role="status" className="mt-3 text-caramel font-bold text-sm">{t}</p> : null);
 const T = (t: string) => new Date(t).toLocaleString("ar-EG", { timeZone: "Africa/Cairo", dateStyle: "short", timeStyle: "short" });
@@ -105,9 +106,10 @@ export function TreasuryPanel() {
 }
 
 export function ReportsPanel() {
+  const { branch } = useAdmin();
   const today = cairoToday(); const [from, setFrom] = useState(today); const [to, setTo] = useState(today); const [shift, setShift] = useState(""); const [d, setD] = useState<any>(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false);
   const [shifts] = useData(() => sb.from("shifts").select("id,cashier_name,opened_at").order("id", { ascending: false }).limit(80), []);
-  const run = useCallback(async () => { setBusy(true); setMsg(""); const r = await sb.rpc("report_data", { d_from: from, d_to: to, p_shift: shift ? +shift : null }); setBusy(false); if (r.error) return setMsg("تعذّر تحميل التقرير: " + r.error.message); setD(r.data); }, [from, to, shift]);
+  const run = useCallback(async () => { setBusy(true); setMsg(""); const r = await sb.rpc("report_data", { d_from: from, d_to: to, p_shift: shift ? +shift : null, p_branch: branch ? +branch : null }); setBusy(false); if (r.error) return setMsg("تعذّر تحميل التقرير: " + r.error.message); setD(r.data); }, [from, to, shift, branch]);
   useEffect(() => { run(); }, [run]);
   const preset = (a: string, b: string) => { setFrom(a); setTo(b); };
   const s = d?.summary; const mx = d ? Math.max(1, ...d.by_method.map((x: any) => Number(x.amount))) : 1;
@@ -136,13 +138,14 @@ export function ReportsPanel() {
 }
 
 export function SalesPanel() {
-  const [rows, reload, err] = useData(() => sb.from("invoices").select("id,paid_at,total,discount,paid_amount,payment_method,status,shifts(cashier_name)").in("status", ["paid", "refunded"]).order("paid_at", { ascending: false }).limit(80), []);
+  const { branch } = useAdmin();
+  const [rows, reload, err] = useData(() => sb.from("invoices").select("id,paid_at,total,discount,paid_amount,payment_method,status,branch_id,shifts(cashier_name)").in("status", ["paid", "refunded"]).order("paid_at", { ascending: false }).limit(80), []);
   const [msg, setMsg] = useState(""); const [q, setQ] = useState("");
   async function refund(r: any) {
     if (!confirm(`استرجاع الفاتورة بـ ${M(r.paid_amount)} ج؟ هيرجع المخزون والفلوس ونقاط العميل.`)) return;
     const x = await sb.rpc("refund_invoice", { p_inv: r.id, p_reason: "استرجاع من المكتب" }); setMsg(x.error ? "تعذّر الاسترجاع: " + x.error.message : "اتسترجعت الفاتورة."); reload();
   }
-  const list = (rows as any[]).filter(r => !q || String(r.id).startsWith(q) || (r.shifts?.cashier_name ?? "").includes(q));
+  const list = (rows as any[]).filter(r => (!branch || String(r.branch_id) === branch) && (!q || String(r.id).startsWith(q) || (r.shifts?.cashier_name ?? "").includes(q)));
   return (
     <section><input className="w-full" placeholder="دوّر برقم الفاتورة أو اسم الكاشير" value={q} onChange={e => setQ(e.target.value)} /><Msg t={msg || err} />
       <ul className="mt-3 space-y-2">{list.length === 0 ? <p className="text-roast">مفيش فواتير.</p> : list.map(r => (

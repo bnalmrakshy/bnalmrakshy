@@ -1,11 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import Gate, { Me } from "@/components/Gate";
 import { btn } from "@/components/ui";
 import { sb, ar } from "@/lib/supabase";
 import { METHOD, M } from "@/lib/erp";
 type It = { id: number; category: string; name: string; price: number; points: number; stock: number; low: boolean };
+let syncing = false;
 type Inv = { id: string; token: string; total: number; points: number; expires_at: string };
 const ERR: Record<string, string> = { "no open shift": "افتح الشيفت الأول.", "invoice not open": "الفاتورة دي اتقفلت قبل كده.", "customer required": "اختار العميل للبيع الآجل.", forbidden: "مش مسموح.",
   "claimed invoice pending": "فيه فاتورة العميل مسحها وماتدفعتش. ادفعها الأول.", "Failed to fetch": "مفيش اتصال بالإنترنت.", "bad item": "فيه صنف مش صالح." };
@@ -15,7 +17,7 @@ function Pos({ me }: { me: Me }) {
   const [q, setQ] = useState(""); const [cat, setCat] = useState(""); const [inv, setInv] = useState<Inv | null>(null); const [st, setSt] = useState<any>(null); const [left, setLeft] = useState(0);
   const [mins, setMins] = useState(2); const [method, setMethod] = useState("cash"); const [custs, setCusts] = useState<any[]>([]); const [cust, setCust] = useState(""); const [nc, setNc] = useState({ name: "", phone: "" });
   const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [openCash, setOpenCash] = useState(""); const [closing, setClosing] = useState(false); const [counted, setCounted] = useState("");
-  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]); const [branch, setBranch] = useState(""); const [online, setOnline] = useState(true); const [stats, setStats] = useState({ n: 0, sum: 0 }); const [summary, setSummary] = useState<any>(null);
+  const [branches, setBranches] = useState<{ id: number; name: string }[]>([]); const [branch, setBranch] = useState(""); const [online, setOnline] = useState(true); const [queue, setQueue] = useState<any[]>([]); const [stats, setStats] = useState({ n: 0, sum: 0 }); const [summary, setSummary] = useState<any>(null);
   useEffect(() => { const f = () => setOnline(navigator.onLine); f(); window.addEventListener("online", f); window.addEventListener("offline", f); return () => { window.removeEventListener("online", f); window.removeEventListener("offline", f); }; }, []);
   const loadStats = useCallback(async (sid: number) => { const r = await sb.from("invoices").select("paid_amount").eq("shift_id", sid).eq("status", "paid"); const rows = r.data ?? []; setStats({ n: rows.length, sum: rows.reduce((a: number, x: any) => a + x.paid_amount, 0) }); }, []);
   const loadShift = useCallback(async () => {
@@ -29,13 +31,28 @@ function Pos({ me }: { me: Me }) {
     }
   }, [me.id, loadStats]);
   const loadCusts = useCallback(async () => { const r = await sb.from("customers").select("id,name,phone").order("name"); if (r.error) setMsg("تعذّر تحميل العملاء: " + r.error.message); setCusts(r.data ?? []); }, []);
-  useEffect(() => { loadShift(); loadCusts(); sb.from("branches").select("id,name").eq("active", true).order("id").then(r => { setBranches(r.data ?? []); if (r.data?.length === 1) setBranch(String(r.data[0].id)); }); sb.rpc("pos_items").then(r => { if (r.error) setMsg("تعذّر تحميل الأصناف: " + r.error.message); else setItems(r.data ?? []); }); }, [loadShift, loadCusts]);
+  useEffect(() => { loadShift(); loadCusts(); sb.from("branches").select("id,name").eq("active", true).order("id").then(r => { setBranches(r.data ?? []); if (r.data?.length === 1) setBranch(String(r.data[0].id)); }); sb.rpc("pos_items").then(r => { if (r.error) { setMsg("تعذّر تحميل الأصناف، بنستخدم النسخة المحفوظة."); try { setItems(JSON.parse(localStorage.getItem("pos_items") ?? "[]")); } catch { /* ignore */ } } else { setItems(r.data ?? []); try { localStorage.setItem("pos_items", JSON.stringify(r.data ?? [])); } catch { /* ignore */ } } }); }, [loadShift, loadCusts]);
   useEffect(() => { if (!inv) return; const t = setInterval(async () => { const r = await sb.from("invoices").select("claimed_at,discount,total,points_earned,status,claimer:claimed_by(display_name)").eq("id", inv.id).single(); if (r.data) setSt(r.data); }, 2500); return () => clearInterval(t); }, [inv]);
   useEffect(() => { if (!inv) return; const t = setInterval(() => setLeft(Math.max(0, Math.round((+new Date(inv.expires_at) - Date.now()) / 1000))), 500); return () => clearInterval(t); }, [inv]);
   const lines = items.filter(i => (cart[i.id] ?? 0) > 0); const total = lines.reduce((a, i) => a + i.price * cart[i.id], 0); const pts = lines.reduce((a, i) => a + i.points * cart[i.id], 0);
   const cats = Array.from(new Set(items.map(i => i.category))); const shown = items.filter(i => (!cat || i.category === cat) && (!q || i.name.includes(q)));
   const bump = (id: number, d: number) => setCart(c => ({ ...c, [id]: Math.max(0, Math.min(100, (c[id] ?? 0) + d)) }));
   const due = inv ? inv.total - (st?.discount ?? 0) : 0; const off = !online || busy;
+  useEffect(() => { try { setQueue(JSON.parse(localStorage.getItem("pos_queue") ?? "[]")); } catch { /* ignore */ } navigator.serviceWorker?.register("/pos-sw.js", { scope: "/pos" }).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!online || queue.length === 0 || !shift) return;
+    const t = setTimeout(async () => {
+      if (syncing) return; syncing = true; const left: any[] = [];
+      for (const s of queue) { const r = await sb.rpc("record_offline_sale", { p_client: s.id, p_lines: s.lines, p_method: s.method, p_paid_at: s.at }); if (r.error) left.push(s); }
+      syncing = false;
+      if (left.length !== queue.length) { try { localStorage.setItem("pos_queue", JSON.stringify(left)); } catch { /* ignore */ } setQueue(left); loadStats(shift.id); }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [online, queue, shift, loadStats]);
+  function saveOffline() {
+    const s = { id: crypto.randomUUID(), lines: lines.map(i => ({ id: i.id, qty: cart[i.id] })), method: "cash", at: new Date().toISOString() }; const n = [...queue, s];
+    try { localStorage.setItem("pos_queue", JSON.stringify(n)); } catch { /* ignore */ } setQueue(n); setCart({}); setMsg(`اتحفظ البيع أوفلاين (${M(total)} ج) وهيتبعت أول ما النت يرجع.`);
+  }
   async function openShift(e: React.FormEvent) { e.preventDefault(); if (branches.length > 1 && !branch) return setMsg("اختار الفرع."); setBusy(true); const r = await sb.rpc("open_shift", { opening: +openCash || 0, p_branch: branch ? +branch : null }); setBusy(false); if (r.error) return setMsg(why(r.error.message)); setMsg(""); setSummary(null); await loadShift(); }
   async function closeShift(e: React.FormEvent) { e.preventDefault(); setBusy(true); const r = await sb.rpc("close_shift", { counted: +counted || 0 }); setBusy(false); if (r.error) return setMsg(why(r.error.message)); setClosing(false); setShift(null); setInv(null); setCart({}); setSummary(r.data); setMsg(""); }
   async function create() {
@@ -49,7 +66,7 @@ function Pos({ me }: { me: Me }) {
   async function cancel() { if (!inv) return; const r = await sb.rpc("cancel_invoice", { inv_id: inv.id }); if (r.error) return setMsg(why(r.error.message)); setInv(null); setSt(null); setMsg("اتلغت الفاتورة."); }
   async function addCust() { if (!nc.name.trim()) return; const r = await sb.rpc("add_customer", { p_name: nc.name, p_phone: nc.phone || null }); if (r.error) return setMsg(why(r.error.message)); setNc({ name: "", phone: "" }); await loadCusts(); setCust(String(r.data)); }
   const chip = (a: boolean) => `shrink-0 px-4 py-2 rounded-full text-sm font-bold ${a ? "bg-espresso text-cream" : "bg-sand text-roast"}`;
-  const banner = !online && <p role="alert" className="mb-3 rounded-xl bg-caramel text-white px-4 py-3 text-sm font-bold">مفيش اتصال بالإنترنت. متقدرش تعمل فاتورة أو تدفع لحد ما يرجع.</p>;
+  const banner = !online && <p role="alert" className="mb-3 rounded-xl bg-caramel text-white px-4 py-3 text-sm font-bold">مفيش اتصال بالإنترنت. تقدر تسجّل بيع كاش أوفلاين وهيتبعت لما النت يرجع.</p>;
   if (shift === undefined) return <main className="min-h-[60vh] grid place-items-center text-roast">لحظة...</main>;
   if (!shift) return (
     <main className="mx-auto max-w-md px-5 pt-8"><h1 className="text-3xl font-black">الكاشير</h1>{banner}
@@ -65,7 +82,7 @@ function Pos({ me }: { me: Me }) {
     <main className="mx-auto max-w-7xl px-4 lg:px-8 pt-4">
       {banner}
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap"><p className="font-black">شيفت #{ar(shift.id)} · {me.display_name} <span className="text-xs text-roast font-normal">من {new Date(shift.opened_at).toLocaleTimeString("ar-EG", { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit" })}</span></p>
-        <div className="flex items-center gap-4"><span className="rounded-full bg-sand px-3 py-1.5 text-xs font-bold num">{M(stats.n)} فاتورة · {M(stats.sum)} ج</span><button onClick={() => setClosing(true)} className="text-sm underline font-bold">قفل الشيفت</button></div></div>
+        <div className="flex items-center gap-4"><span className="rounded-full bg-sand px-3 py-1.5 text-xs font-bold num">{M(stats.n)} فاتورة · {M(stats.sum)} ج</span>{queue.length > 0 && <span className="rounded-full bg-caramel text-white px-3 py-1.5 text-xs font-bold num">{M(queue.length)} مستني مزامنة</span>}<Link href="/delivery" className="text-sm underline font-bold">التوصيل</Link><button onClick={() => setClosing(true)} className="text-sm underline font-bold">قفل الشيفت</button></div></div>
       {msg && <p role="status" className="mb-3 rounded-xl bg-espresso text-cream px-4 py-3 text-sm font-bold break-words">{msg}</p>}
       <div className="lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6 lg:items-start">
         <section>
@@ -99,6 +116,7 @@ function Pos({ me }: { me: Me }) {
             <p className="mt-3 text-3xl font-black num">{M(total)} <span className="text-base">ج</span></p><p className="text-xs text-roast num">العميل يجمع {ar(pts)} نقطة</p>
             <div className="mt-3 flex items-center gap-2 text-sm"><span>مدة الكود:</span>{[1, 2, 5, 10].map(m => <button key={m} onClick={() => setMins(m)} className={`px-3 py-1.5 rounded-full border ${mins === m ? "bg-espresso text-cream border-espresso" : "border-roast/30"}`}>{ar(m)} د</button>)}</div>
             <button disabled={!lines.length || off} onClick={create} className={btn + " w-full mt-4 py-4 text-lg"}>{busy ? "لحظة..." : "اعمل الفاتورة (QR)"}</button>
+            {!online && <button disabled={!lines.length} onClick={saveOffline} className={btn + " w-full mt-2 py-3"}>سجّل بيع كاش (أوفلاين)</button>}
             {lines.length > 0 && <button onClick={() => setCart({})} className="mt-2 text-sm underline text-roast">فضّي الفاتورة</button>}
           </div>}
         </aside>

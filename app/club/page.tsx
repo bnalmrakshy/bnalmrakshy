@@ -32,6 +32,7 @@ function Club({ me }: { me: Me }) {
       {nxt && <div className="rounded-2xl bg-sand/60 p-4"><div className="flex justify-between text-sm font-bold"><span>{lvl.n}</span><span className="text-roast num">فاضل {ar(nxt.min - d.earned)} نقطة لـ{nxt.n}</span></div>
         <div className="h-2 rounded-full bg-white mt-3 overflow-hidden"><div className="h-full bg-brass" style={{ width: `${Math.min(100, ((d.earned - lvl.min) / (nxt.min - lvl.min)) * 100)}%` }} /></div></div>}
       <div className="grid grid-cols-2 gap-3"><Link href="/history" className="bg-espresso text-cream font-bold text-center py-4 active:scale-[.98]">محفظتي</Link><Link href="/profile" className="border border-espresso font-bold text-center py-4 active:scale-[.98]">تعديل حسابي</Link></div>
+      <Link href="/orders" className="block text-center border border-sand py-3 font-bold">طلباتي</Link>
       <button onClick={logout} className="w-full text-sm text-roast py-2">تسجيل خروج</button>
     </main>);
 }
